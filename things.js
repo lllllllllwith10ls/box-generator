@@ -81,18 +81,26 @@ Instance.prototype.Name = function() {
 
 	if (typeof(this.name)!="string") {
 		var str="";
-		if (typeof(this.name[0])=="string") str+=Choose(this.name);
+		if (typeof(this.name[0])=="string") str+=choose(this.name);
 		else {
 			for (var i in this.name) {
-				str+=Choose(this.name[i]);
+				str+=choose(this.name[i]);
 			}
 		}
 		this.name=str;
 	}
-
+	
 	nameParts=this.name.split("|");
 	this.name=nameParts[0];
-	
+	if(this.name = "*RANDOM*") {
+		var number = Rand(5,10)
+		var letters = ["!","@","#","$","%","^","&","*","+","_","?","/","|","\\","-","="];
+		var name=""
+		for(number; number > 0; number--) {
+			name+=choose(letters);
+		}
+		return name;
+	}
 	if (nameParts[1]!=undefined) this.name=this.name+nameParts[1];
 
 }
@@ -103,7 +111,7 @@ Instance.prototype.Grow = function() {
 		for (var i in this.type.contains) {
 			var toMake=this.type.contains[i];
 			if (typeof(toMake)!="string") {
-				toMake=Choose(toMake);
+				toMake=choose(toMake);
 			}
 			toMake=toMake.split(",");
 			var makeAmount=1;
@@ -185,7 +193,21 @@ function toggle(id)
 
 cleanThings();
 
-new Thing("box",["altarca,25-30"]);
+new Thing("box",["abfield,1-5"]);
+new Thing("abfield",["abfield cosmology,2-5","box,1-3"]);
+new Thing("abfield cosmology",["abverse,1-5","schemafield,1-2","box,20%"],"???");
+new Thing("abverse",["abverse,3-7","abrealm,10-15","schemafield,20%","box,10%"],"*RANDOM*|");
+new Thing("abrealm",["unthinkable"],"********");
+new Thing("unthinkable",["uninformation,5-10"],"something?);
+new THing("uninformation",["abverse"],"  ");
+new Thing("schemafield",["patacosmology,3-10","function,10-20"]);
+new Thing("function",["information,5-10"]);
+new Thing("information",["null"]);
+new Thing("null",["abrealm"]);
+new Thing("patacosmology",["patacosmology,3-10","metacosmology,10%"]);
+new Thing("metacosmology",["later"]);
+
+
 new Thing("altarca",["later"]);
 
 new Thing("error",["rip"],"sorry, your object is not defined");

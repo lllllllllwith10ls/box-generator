@@ -193,7 +193,7 @@ new Thing("later",["rip"],"not yet defined");
 new Thing("rip",["consolation box"],"rip");
 new Thing("consolation box",[".box"]);
 
-function LaunchNest(what) {
+function launchNest(what) {
 	if (!thing[what]) what="error";
 	var Seed=make(what);
 	Seed.Grow(0);

@@ -62,7 +62,7 @@ function cleanThings()
 
 var instances = [];
 var instanceN = 0;
-class Instance(what){
+class Instance {
 	constructor(what) {
 		this.name="thing";
 		this.type=things[what];

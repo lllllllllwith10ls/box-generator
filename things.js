@@ -124,10 +124,10 @@ Instance.prototype.Grow = function() {
 				}
 			}
 
-			if (Things[toMake[0]]!=undefined) {
+			if (things[toMake[0]]!=undefined) {
 				if (Math.random()*100<=makeProb) {
 					for (var ii=0;ii<makeAmount;ii++) {
-						var New=Make(Things[toMake[0]].name);
+						var New=Make(things[toMake[0]].name);
 						New.parent=this;
 						this.children.push(New);
 					}

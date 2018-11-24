@@ -194,7 +194,7 @@ new Thing("rip",["consolation box"],"rip");
 new Thing("consolation box",[".box"]);
 
 function launchNest(what) {
-	if (!thing[what]) what="error";
+	if (!things[what]) what="error";
 	var Seed=make(what);
 	Seed.Grow(0);
 	Seed.List();

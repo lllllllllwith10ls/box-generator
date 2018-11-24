@@ -2,31 +2,16 @@
 <html>
 <head>
 	<title>Box generator</title>
+	<script type="text/javascript" src="things.js"></script>
 </head>
 <body>
 	<div id="debug"></div>
 	
 
-	<script type="text/javascript" src="scripts/things.js"></script>
-	<span style="display:none;">
-	<script>Offline=0;</script></span>
-
 	<script>
-		let SeedObject="box";
-		let Offline=1;
-	</script>
-	<script>
-		let stop=true;
-		launchNest(SeedObject.toLowerCase());
-		let x=0
-		const looper = () => {
-			if(stop == false) {
-				toggle(x);
-				x++;
-			}
-		}
-		setInterval(looper,10);
+		var seedObject="box";
 		
+		launchNest(seedObject.toLowerCase());
 	</script>
 </body>
 </html>

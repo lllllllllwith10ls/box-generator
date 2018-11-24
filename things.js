@@ -127,7 +127,7 @@ Instance.prototype.Grow = function() {
 			if (things[toMake[0]]!=undefined) {
 				if (Math.random()*100<=makeProb) {
 					for (var ii=0;ii<makeAmount;ii++) {
-						var New=Make(things[toMake[0]].name);
+						var New=make(things[toMake[0]].name);
 						New.parent=this;
 						this.children.push(New);
 					}

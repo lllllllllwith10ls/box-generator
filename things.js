@@ -92,14 +92,14 @@ Instance.prototype.Name = function() {
 	
 	nameParts=this.name.split("|");
 	this.name=nameParts[0];
-	if(this.name = "*RANDOM*") {
+	if(this.name === "*RANDOM*") {
 		var number = Rand(5,10)
 		var letters = ["!","@","#","$","%","^","&","*","+","_","?","/","|","\\","-","="];
 		var name=""
 		for(number; number > 0; number--) {
 			name+=choose(letters);
 		}
-		return name;
+		this.name = name;
 	}
 	if (nameParts[1]!=undefined) this.name=this.name+nameParts[1];
 

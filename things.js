@@ -213,7 +213,7 @@ new Thing("altarca",["later"]);
 new Thing("error",["consolation prize"],"sorry, your object is not defined");
 new Thing("later",["consolation prize"],"will do later");
 new Thing("consolation prize",["consolation box"],"here have a box");
-new Thing("consolation box",["altarca,25-30"]);
+new Thing("consolation box",["abfield,1-5"]);
 
 function launchNest(what) {
 	if (!things[what]) what="error";

@@ -159,25 +159,25 @@ function make(thing)
 
 function toggle(id)
 {
-	if (Instances[id].display==false)
+	if (instances[id].display==false)
 	{
 
-		for (var i in Instances[id].children)
+		for (var i in instances[id].children)
 		{
-			if (Instances[id].children[i].grown==false) {
-				Instances[id].children[i].Grow(0);
-				Instances[id].children[i].List(0);
+			if (instances[id].children[i].grown==false) {
+				instances[id].children[i].Grow(0);
+				instances[id].children[i].List(0);
 			}
 		}
 
 
-		Instances[id].display=false;
+		instances[id].display=false;
 		document.getElementById("container"+id).style.display="block";
 		document.getElementById("arrow"+id).innerHTML="-";
 	}
-	else if (Instances[id].display==true)
+	else if (instances[id].display==true)
 	{
-		Instances[id].display=false;
+		instances[id].display=false;
 		document.getElementById("container"+id).style.display="none";
 		document.getElementById("arrow"+id).innerHTML="+";
 	}

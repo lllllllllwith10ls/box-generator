@@ -1,5 +1,5 @@
 function choose(array) {
-	return array[Math.floor(Math.random()*arr.length)];
+	return array[Math.floor(Math.random()*array.length)];
 }
 
 function Rand(min,max) {

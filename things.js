@@ -126,8 +126,8 @@ Instance.prototype.Grow = function() {
 						makeAmount=Rand(makeAmountArray[0],makeAmountArray[1]);
 					}
 					var makeProbArray=(toMake[1]+"?").split("%");
-					if (makeProb[1]!=undefined) {
-						makeProb=makeProb[0];
+					if (makeProbArray[1]!=undefined) {
+						makeProb=makeProbArray[0];
 					}
 				}
 			}
@@ -199,11 +199,11 @@ new Thing("abfield cosmology",["abverse,1-5","schemafield,1-2","box,20%"],"???")
 new Thing("abverse",["abverse,3-7","abrealm,10-15","schemafield,20%","box,10%"],"*RANDOM*|");
 new Thing("abrealm",["unthinkable"],"********");
 new Thing("unthinkable",["uninformation,5-10"],"something?");
-new Thing("uninformation",["abverse"],"  ");
+new Thing("uninformation",["box"],"  ");
 new Thing("schemafield",["patacosmology,3-10","function,10-20"]);
 new Thing("function",["information,5-10"]);
 new Thing("information",["null"]);
-new Thing("null",["abrealm"]);
+new Thing("null",["box"]);
 new Thing("patacosmology",["patacosmology,3-10","metacosmology,10%"]);
 new Thing("metacosmology",["later"]);
 

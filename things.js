@@ -185,6 +185,14 @@ function toggle(id)
 
 cleanThings();
 
+new Thing("box",["altarca,25-30"]);
+new Thing("altarca",["later"]);
+
+new Thing("error",["rip"],"sorry, your object is not defined");
+new Thing("later",["rip"],"not yet defined");
+new Thing("rip",["consolation box"],"rip");
+new Thing("consolation box",[".box"]);
+
 function LaunchNest(what) {
 	if (!thing[what]) what="error";
 	var Seed=make(what);

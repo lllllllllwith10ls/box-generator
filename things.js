@@ -147,7 +147,7 @@ Instance.prototype.List=function()
 		str+='<div id="div'+this.children[i].n+'">'+this.children[i].name+'</div>';
 	}
 	if (this.children.length>0) {
-		document.getElementById("div"+this.n).innerHTML='<a href="javascript:Toggle('+this.n+');" style="padding-right:8px;" alt="archetype : '+(this.type.name)+'" title="archetype : '+(this.type.name)+'"><span class="arrow" id="arrow'+this.n+'">+</span> '+this.name+'</a><div id="container'+this.n+'" class="thing" style="display:none;'+'">'+str+'</div>';
+		document.getElementById("div"+this.n).innerHTML='<a href="javascript:toggle('+this.n+');" style="padding-right:8px;" alt="archetype : '+(this.type.name)+'" title="archetype : '+(this.type.name)+'"><span class="arrow" id="arrow'+this.n+'">+</span> '+this.name+'</a><div id="container'+this.n+'" class="thing" style="display:none;'+'">'+str+'</div>';
 	}
 	else document.getElementById("div"+this.n).innerHTML='<span class="emptyThing">'+this.name+'</span>';
 }

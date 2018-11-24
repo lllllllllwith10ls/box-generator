@@ -171,7 +171,7 @@ function toggle(id)
 		}
 
 
-		instances[id].display=false;
+		instances[id].display=true;
 		document.getElementById("container"+id).style.display="block";
 		document.getElementById("arrow"+id).innerHTML="-";
 	}
@@ -191,7 +191,7 @@ new Thing("altarca",["later"]);
 new Thing("error",["rip"],"sorry, your object is not defined");
 new Thing("later",["rip"],"not yet defined");
 new Thing("rip",["consolation box"],"rip");
-new Thing("consolation box",[".box"]);
+new Thing("consolation box",["altarca,25-30"]);
 
 function launchNest(what) {
 	if (!things[what]) what="error";

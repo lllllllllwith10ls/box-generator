@@ -119,15 +119,15 @@ Instance.prototype.Grow = function() {
 			if (toMake[1]==undefined) toMake[1]=1;
 			else {
 				
-				for(var j = 0; j<toMake.length;j++) {
-					var makeAmountArray=toMake[j].split("-");
-					if (makeAmountArray[j]==undefined) makeAmount=makeAmountArray[0];
-					else {
-						makeAmount=Rand(makeAmountArray[0],makeAmountArray[1]);
-					}
-					var makeProbArray=(toMake[1]+"?").split("%");
-					if (makeProbArray[1]!=undefined) {
-						makeProb=makeProbArray[0];
+				for(var j = 1; j<toMake.length;j++) {
+					if (toMake[j].includes("%")) {
+						makeProb=toMake[j].replace("%","");
+					} else {
+						var makeAmountArray=toMake[j].split("-");
+						if (makeAmountArray[1]==undefined) makeAmount=makeAmountArray[0];
+						else {
+							makeAmount=Rand(makeAmountArray[0],makeAmountArray[1]);
+						}
 					}
 				}
 			}

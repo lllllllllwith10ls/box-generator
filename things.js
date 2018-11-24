@@ -193,7 +193,7 @@ new Thing("later",["rip"],"not yet defined");
 new Thing("rip",["consolation box"],"rip");
 new Thing("consolation box",[".box"]);
 
-document.getElementById("debug").innerHTML="<div id="div0" class="thing"></div>";
+document.getElementById("debug").innerHTML="<div id=\"div0\" class=\"thing\"></div>";
 function launchNest(what) {
 	if (!things[what]) what="error";
 	var Seed=make(what);

@@ -210,9 +210,9 @@ new Thing("metacosmology",["later"]);
 
 new Thing("altarca",["later"]);
 
-new Thing("error",["rip"],"sorry, your object is not defined");
-new Thing("later",["rip"],"not yet defined");
-new Thing("rip",["consolation box"],"rip");
+new Thing("error",["consolation prize"],"sorry, your object is not defined");
+new Thing("later",["consolation prize"],"will do later");
+new Thing("consolation prize",["consolation box"],"here have a box");
 new Thing("consolation box",["altarca,25-30"]);
 
 function launchNest(what) {

@@ -199,7 +199,7 @@ new Thing("abfield cosmology",["abverse,1-5","schemafield,1-2","box,20%"],"???")
 new Thing("abverse",["abverse,3-7","abrealm,10-15","schemafield,20%","box,10%"],"*RANDOM*|");
 new Thing("abrealm",["unthinkable"],"********");
 new Thing("unthinkable",["uninformation,5-10"],"something?");
-new THing("uninformation",["abverse"],"  ");
+new Thing("uninformation",["abverse"],"  ");
 new Thing("schemafield",["patacosmology,3-10","function,10-20"]);
 new Thing("function",["information,5-10"]);
 new Thing("information",["null"]);

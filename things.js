@@ -100,7 +100,7 @@ Instance.prototype.Name = function() {
 			name+=choose(letters);
 		}
 		this.name = name;
-	} else if(this.name === "*RANDOM*") {
+	} else if(this.name === "*LETTERS*") {
 		var number = Rand(5,10)
 		var letters = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
 		var name=""
@@ -205,7 +205,7 @@ new Thing("box",["abfield,1-5"]);
 new Thing("abfield",["abfield cosmology,2-5","box,1-3"]);
 new Thing("abfield cosmology",["abverse,1-5","schemafield,1-2","box,20%"],"???");
 new Thing("abverse",["abverse,3-7","abrealm,10-15","schemafield,20%","box,10%"],"*RANDOM*|");
-new Thing("abrealm",["inobject"],"********");
+new Thing("abrealm",["inobject,10-20"],"********");
 new Thing("inobject",["unformation,5-10"],"*LETTERS*|");
 new Thing("unformation",["box"],"  ");
 new Thing("schemafield",["patacosmology,3-10","function,10-20"]);

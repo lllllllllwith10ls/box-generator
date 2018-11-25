@@ -100,6 +100,14 @@ Instance.prototype.Name = function() {
 			name+=choose(letters);
 		}
 		this.name = name;
+	} else if(this.name === "*RANDOM*") {
+		var number = Rand(5,10)
+		var letters = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
+		var name=""
+		for(number; number > 0; number--) {
+			name+=choose(letters);
+		}
+		this.name = name;
 	}
 	if (nameParts[1]!=undefined) this.name=this.name+nameParts[1];
 
@@ -197,21 +205,25 @@ new Thing("box",["abfield,1-5"]);
 new Thing("abfield",["abfield cosmology,2-5","box,1-3"]);
 new Thing("abfield cosmology",["abverse,1-5","schemafield,1-2","box,20%"],"???");
 new Thing("abverse",["abverse,3-7","abrealm,10-15","schemafield,20%","box,10%"],"*RANDOM*|");
-new Thing("abrealm",["unthinkable"],"********");
-new Thing("unthinkable",["uninformation,5-10"],"something?");
-new Thing("uninformation",["box"],"  ");
+new Thing("abrealm",["inobject"],"********");
+new Thing("inobject",["unformation,5-10"],"*LETTERS*|");
+new Thing("unformation",["box"],"  ");
 new Thing("schemafield",["patacosmology,3-10","function,10-20"]);
 new Thing("function",["information,5-10"]);
 new Thing("information",["null"]);
 new Thing("null",["box"]);
 new Thing("patacosmology",["patacosmology,3-10","metacosmology,10%"]);
-new Thing("metacosmology",["later"]);
-
-
-new Thing("altarca",["later"]);
+new Thing("metacosmology",["metacosmology,2-3","altarca,3-7"]);
+new Thing("altarca",["high archverse,10-20"]);
+new Thing("high archverse",["omniverse,20-30"]);
+new Thing("omniverse",["low archverse,20-30"]);
+new Thing("low archverse",["megaverse,20-30"]);
+new Thing("megaverse",["multiverse,20-30"]);
+new Thing("multiverse",["universe,20-30"]);
+new Thing("universe",["later"]);
 
 new Thing("error",["consolation prize"],"sorry, your object is not defined");
-new Thing("later",["consolation prize"],"will do later");
+new Thing("later",["consolation prize"],"sorry, will do later");
 new Thing("consolation prize",["consolation box"],"here have a box");
 new Thing("consolation box",["abfield,1-5"]);
 

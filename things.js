@@ -6,7 +6,7 @@ function Rand(min,max) {
 	return parseFloat(Math.floor(Math.random()*(max-min+1)))+parseFloat(min);
 }
 
-function randName(min,max) {
+function randomName(min,max) {
 	var length = Rand(min,max);
 	var consonantsInARow = 0;
 	var vowelsInARow = 0;

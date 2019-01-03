@@ -81,7 +81,7 @@ class Verse {
 			if(clusterSize > 0) {
 				if(clusterSize === 1) {
 					return new Instance(this.name + clusterNames[clusterSize],[{
-						object: this.verses[this.size],
+						object: this,
 						otherVars: [0],
 						amount: makeFunction(Rand,10,20)
 					}],this);

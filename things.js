@@ -46,6 +46,7 @@ class Cosmology {
 		this.verseName = name + "verse";
 		this.name = name + " altarca";
 		this.size = Rand(4,8);
+		var size = this.size;
 		this.type = "cosmology";
 		this.verses = [];
 		this.size2 = Rand(2,4);

@@ -138,15 +138,7 @@ Instance.prototype.Grow = function() {
 	if (this.grown==false) {
 		var children = [];
 		for (var i in this.children) {
-			var toMake=this.children[i].object;
 			
-			if (toMake === "Cosmology") {
-				toMake = new Cosmology(randomName(3,10)).getInstance();;
-			} else if (this.children[i].otherVars) {
-				toMake = toMake.getInstance(...this.children[i].otherVars);
-			} else {
-				toMake = toMake.getInstance();
-			}
 			var makeAmount;
 			if(this.children[i].amount instanceof Function) {
 				makeAmount = this.children[i].amount();
@@ -154,6 +146,15 @@ Instance.prototype.Grow = function() {
 				makeAmount = this.children[i].amount;
 			}
 			for (var ii=0;ii<makeAmount;ii++) {
+				var toMake=this.children[i].object;
+			
+				if (toMake === "Cosmology") {
+					toMake = new Cosmology(randomName(3,10)).getInstance();;
+				} else if (this.children[i].otherVars) {
+					toMake = toMake.getInstance(...this.children[i].otherVars);
+				} else {
+					toMake = toMake.getInstance();
+				}
 				children.push(toMake);
 				toMake.parent = this;
 			}

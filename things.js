@@ -198,8 +198,6 @@ function toggle(id)
 	}
 }
 
-cleanThings();
-
 var box = new GenericThing("box",{
 	object: "cosmology",
 	amount: makeFunction(Rand,10,20)

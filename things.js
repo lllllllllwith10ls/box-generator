@@ -198,15 +198,14 @@ function toggle(id)
 	}
 }
 
-var box = new GenericThing("box",{
+var box = new GenericThing("box",[{
 	object: "Cosmology",
 	amount: makeFunction(Rand,10,20)
-	
-});
-var consolationBox = new GenericThing("sorry, have a box",{
+}]);
+var consolationBox = new GenericThing("sorry, have a box",[{
 	object: "Cosmology",
 	amount: makeFunction(Rand,10,20)
-});
+}]);
 
 function launchNest(what) {
 	var Seed=what.getInstance();

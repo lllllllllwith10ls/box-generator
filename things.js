@@ -72,7 +72,7 @@ class Cosmology {
 class Verse {
 	constructor(tier,name,cosmology) {
 		this.cosmology = cosmology;
-		var tierNames = ["uni","multi","mega","giga","tera","peta","exa","zetta","yotta"];
+		var tierNames = ["","multi-","mega-","giga-","tera-","peta-","exa-","zetta-","yotta-"];
 		this.name = tierNames[tier] + name;
 		this.type = "verse";
 		this.tier = tier;

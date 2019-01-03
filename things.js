@@ -49,7 +49,7 @@ class Cosmology {
 		this.type = "cosmology";
 		this.verses = [];
 		this.size2 = Rand(2,4);
-		for(size, size >= 0; size--) {
+		for(size; size >= 0; size--) {
 			this.verses[size] = new Verse(size,this.verseName,this);
 		}
 		this.getInstance = function() {

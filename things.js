@@ -199,12 +199,12 @@ function toggle(id)
 }
 
 var box = new GenericThing("box",{
-	object: "cosmology",
+	object: "Cosmology",
 	amount: makeFunction(Rand,10,20)
 	
 });
 var consolationBox = new GenericThing("sorry, have a box",{
-	object: "cosmology",
+	object: "Cosmology",
 	amount: makeFunction(Rand,10,20)
 });
 

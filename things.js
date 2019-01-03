@@ -14,7 +14,7 @@ function randomName(min,max) {
 	var vowels = ['a','e','i','o','u',];
 	var name = "";
 	for(length; length >= 0; length--) {
-		if((Math.random() > 0.5 || consonantsInARow >= 3) && vowelsInARow < 3) {
+		if((Math.random() > 0.5 || consonantsInARow >= 2) && vowelsInARow < 2) {
 			name += choose(vowels);
 			vowelsInARow ++;
 			consonantsInARow = 0;

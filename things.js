@@ -26,8 +26,8 @@ function randomName(min,max) {
 	}
 }
 
-function makeFunction(func,...args) {
-	return function(){ return func(...args); };
+function makeFunction(func,...theArgs) {
+	return function(){ return func(...theArgs); };
 }
 
 class GenericThing {
@@ -120,9 +120,10 @@ class Verse {
 var instances = [];
 var instanceN = 0;
 class Instance {
-	constructor(name,children,parent) {
+	constructor(name,children,type) {
 		this.name=name;
-		this.parent=parent;
+		this.type=type;
+		this.parent=null;
 		this.children=children;
 		this.n=instanceN;
 		this.display=false;
@@ -153,6 +154,7 @@ Instance.prototype.Grow = function() {
 			}
 			for (var ii=0;ii<makeAmount;ii++) {
 				this.children.push(toMake);
+				toMake.parent = this;
 			}
 		}
 		this.grown=true;

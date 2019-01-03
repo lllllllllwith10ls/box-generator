@@ -24,6 +24,7 @@ function randomName(min,max) {
 			vowelsInARow = 0;
 		}
 	}
+	return name;
 }
 
 function makeFunction(func,...theArgs) {
@@ -153,12 +154,12 @@ Instance.prototype.Grow = function() {
 				makeAmount = this.children[i].amount;
 			}
 			for (var ii=0;ii<makeAmount;ii++) {
-				this.children.push(toMake);
+				children.push(toMake);
 				toMake.parent = this;
 			}
 		}
 		this.grown=true;
-		this.children = children
+		this.children = children;
 	}
 }
 

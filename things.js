@@ -6,68 +6,123 @@ function Rand(min,max) {
 	return parseFloat(Math.floor(Math.random()*(max-min+1)))+parseFloat(min);
 }
 
-var things = {};
-var thingsN = 0;
-
-class Thing {
-	constructor(name,contains,namegen) {
-		this.name=name;
-		this.contains=contains;
-		this.namegen=namegen;
-		if (this.namegen==undefined) this.namegen=this.name;
-
-		things[name]=this;
-		thingsN++;
+function randName(min,max) {
+	var length = Rand(min,max);
+	var consonantsInARow = 0;
+	var vowelsInARow = 0;
+	var consonants = ["b","c","d","f","g","h",'j','k','l','m','n','p','q','r','s','t','v','w','x','y','z'];
+	var vowels = ['a','e','i','o','u',];
+	var name = "";
+	for(length; length >= 0; length--) {
+		if((Math.random() > 0.5 || consonantsInARow >= 3) && vowelsInARow < 3) {
+			name += choose(vowels);
+			vowelsInARow ++;
+			consonantsInARow = 0;
+		} else {
+			name += choose(consonants);
+			consonantsInARow ++;
+			vowelsInARow = 0;
+		}
 	}
 }
 
-function cleanThings()
-{
-	for (var iT in things)
-	{
-		var thisT=things[iT];
+function makeFunction(func,...args) {
+	return function(){ return func(...args); };
+}
 
-		var toConcat=[];
-		for (var i in thisT.contains)
-		{
-			if (typeof(thisT.contains[i])=="string")
-			{
-				if (thisT.contains[i].charAt(0)==".")
-				{
-					if (things[thisT.contains[i].substring(1)]!=undefined)
-					{
-						toConcat=toConcat.concat(things[thisT.contains[i].substring(1)].contains);
-					}
-					thisT.contains[i]="";
+class GenericThing {
+	constructor(name,contains) {
+		this.name = name;
+		this.contains = contains;
+		this.getInstance = function() {
+
+			return new Instance(this.name,contains,this);
+		}
+	}
+}
+
+class Cosmology {
+	constructor(name) {
+		this.verseName = name + "verse";
+		this.name = name + " altarca";
+		this.size = Rand(4,8);
+		this.type = "cosmology";
+		this.verses = [];
+		this.size2 = Rand(2,4);
+		for(size, size >= 0; size--) {
+			this.verses[size] = new Verse(size,this.verseName,this);
+		}
+		this.getInstance = function() {
+
+			return new Instance(this.name,[{
+				object: this.verses[this.size],
+				otherVars: [this.size2],
+				amount: makeFunction(Rand,10,20)
+			},{
+				object: this.verses[this.size],
+				otherVars: [this.size2-1],
+				amount: makeFunction(Rand,25,40)
+			}],this);
+		}
+	}
+}
+
+class Verse {
+	constructor(tier,name,cosmology) {
+		this.cosmology = cosmology;
+		var tierNames = ["uni","multi","mega","giga","tera","peta","exa","zetta","yotta"];
+		this.name = tierNames[tier] + name;
+		this.type = "verse";
+		this.tier = tier;
+		this.getInstance = function(clusterSize) {
+			var clusterNames = [""," cluster"," supercluster"," hypercluster"," ultracluster"]
+			if(clusterSize > 0) {
+				if(clusterSize === 1) {
+					return new Instance(this.name + clusterNames[clusterSize],[{
+						object: this.verses[this.size],
+						otherVars: [0],
+						amount: makeFunction(Rand,10,20)
+					}],this);
+				} else {
+					return new Instance(this.name + clusterNames[clusterSize],[{
+						object: this,
+						otherVars: [clusterSize-1],
+						amount: makeFunction(Rand,10,20)
+					},{
+						object: this,
+						otherVars: [clusterSize-2],
+						amount: makeFunction(Rand,25,40)
+					}],this);
+				}
+			} else {
+				if(tier === 0) {
+					return new Instance(this.name + clusterNames[clusterSize],[{
+						object: consolationBox,
+						amount: 1
+					}],this);
+				} else {
+					var size = Rand(2,4);
+					return new Instance(this.name + clusterNames[clusterSize],[{
+						object: this.cosmology.verses[this.tier-1],
+						otherVars: [size],
+						amount: makeFunction(Rand,10,20)
+					},{
+						object: this.cosmology.verses[this.tier-1],
+						otherVars: [size-1],
+						amount: makeFunction(Rand,25,40)
+					}],this);
 				}
 			}
 		}
-
-		if (toConcat.length>0)
-		{
-			for (var i in toConcat)
-			{
-				thisT.contains.push(toConcat[i]);
-			}
-		}
-
-		var newContains=[];
-		for (var i in thisT.contains)
-		{
-			if (thisT.contains[i]!="") newContains.push(thisT.contains[i]);
-		}
-		thisT.contains=newContains;
 	}
 }
-
 var instances = [];
 var instanceN = 0;
 class Instance {
-	constructor(what) {
-		this.name="thing";
-		this.type=things[what];
-		this.parent=0;
-		this.children=[];
+	constructor(name,children,parent) {
+		this.name=name;
+		this.parent=parent;
+		this.children=children;
 		this.n=instanceN;
 		this.display=false;
 		this.grown=false;
@@ -76,82 +131,31 @@ class Instance {
 	}
 }
 
-Instance.prototype.Name = function() {
-	this.name=this.type.namegen;
-
-	if (typeof(this.name)!="string") {
-		var str="";
-		if (typeof(this.name[0])=="string") str+=choose(this.name);
-		else {
-			for (var i in this.name) {
-				str+=choose(this.name[i]);
-			}
-		}
-		this.name=str;
-	}
-	
-	nameParts=this.name.split("|");
-	this.name=nameParts[0];
-	if(this.name === "*RANDOM*") {
-		var number = Rand(5,10)
-		var letters = ["!","@","#","$","%","^","&","*","+","_","?","/","|","\\","-","="];
-		var name=""
-		for(number; number > 0; number--) {
-			name+=choose(letters);
-		}
-		this.name = name;
-	} else if(this.name === "*LETTERS*") {
-		var number = Rand(5,10)
-		var letters = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
-		var name=""
-		for(number; number > 0; number--) {
-			name+=choose(letters);
-		}
-		this.name = name;
-	}
-	if (nameParts[1]!=undefined) this.name=this.name+nameParts[1];
-
-}
-
 Instance.prototype.Grow = function() {
 	if (this.grown==false) {
-		this.Name();
-		for (var i in this.type.contains) {
-			var toMake=this.type.contains[i];
-			if (typeof(toMake)!="string") {
-				toMake=choose(toMake);
+		var children = [];
+		for (var i in this.children) {
+			var toMake=this.children[i].object;
+			
+			if (toMake === "Cosmology") {
+				toMake = new Cosmology(randomName(3,10)).getInstance();;
+			} else if (this.children[i].otherVars) {
+				toMake = toMake.getInstance(...this.children[i].otherVars);
+			} else {
+				toMake = toMake.getInstance();
 			}
-			toMake=toMake.split(",");
-			var makeAmount=1;
-			var makeProb=100;
-			if (toMake[1]==undefined) toMake[1]=1;
-			else {
-				
-				for(var j = 1; j<toMake.length;j++) {
-					if (toMake[j].includes("%")) {
-						makeProb=toMake[j].replace("%","");
-					} else {
-						var makeAmountArray=toMake[j].split("-");
-						if (makeAmountArray[1]==undefined) makeAmount=makeAmountArray[0];
-						else {
-							makeAmount=Rand(makeAmountArray[0],makeAmountArray[1]);
-						}
-					}
-				}
+			var makeAmount;
+			if(this.children[i].amount instanceof Function) {
+				makeAmount = this.children[i].amount();
+			} else {
+				makeAmount = this.children[i].amount;
 			}
-
-			if (things[toMake[0]]!=undefined) {
-				if (Math.random()*100<=makeProb) {
-					for (var ii=0;ii<makeAmount;ii++) {
-						var New=make(things[toMake[0]].name);
-						New.parent=this;
-						this.children.push(New);
-					}
-				}
+			for (var ii=0;ii<makeAmount;ii++) {
+				this.children.push(toMake);
 			}
-
 		}
 		this.grown=true;
+		this.children = children
 	}
 }
 
@@ -166,11 +170,6 @@ Instance.prototype.List=function()
 		document.getElementById("div"+this.n).innerHTML='<a href="javascript:toggle('+this.n+');" style="padding-right:8px;" alt="archetype : '+(this.type.name)+'" title="archetype : '+(this.type.name)+'"><span class="arrow" id="arrow'+this.n+'">+</span> '+this.name+'</a><div id="container'+this.n+'" class="thing" style="display:none;'+'">'+str+'</div>';
 	}
 	else document.getElementById("div"+this.n).innerHTML='<span class="emptyThing">'+this.name+'</span>';
-}
-
-function make(thing)
-{
-	return new Instance(thing);
 }
 
 function toggle(id)
@@ -201,36 +200,19 @@ function toggle(id)
 
 cleanThings();
 
-new Thing("box",["abfield,1-5"]);
-new Thing("abfield",["abfield cosmology,2-5","box,1-3"]);
-new Thing("abfield cosmology",["abverse,1-5","schemafield,1-2","box,20%"],"???");
-new Thing("abverse",["abverse,3-7","abrealm,10-15","schemafield,20%","box,10%"],"*RANDOM*|");
-new Thing("abrealm",["inobject,10-20"],"********");
-new Thing("inobject",["unformation,5-10"],"*LETTERS*|");
-new Thing("unformation",["box"],"  ");
-new Thing("schemafield",["patacosmology,3-10","function,10-20"]);
-new Thing("function",["information,5-10"]);
-new Thing("information",["null"]);
-new Thing("null",["box"]);
-new Thing("patacosmology",["patacosmology,3-10","metacosmology,10%"]);
-new Thing("metacosmology",["metacosmology,2-3","altarca,3-7"]);
-new Thing("altarca",["high archverse,10-20"]);
-new Thing("high archverse",["omniverse,20-30"]);
-new Thing("omniverse",["low archverse,20-30"]);
-new Thing("low archverse",["megaverse,20-30"]);
-new Thing("megaverse",["multiverse,20-30"]);
-new Thing("multiverse",["universe,20-30"]);
-new Thing("universe",["later"]);
-
-new Thing("error",["consolation prize"],"sorry, your object is not defined");
-new Thing("later",["consolation prize"],"sorry, will do later");
-new Thing("consolation prize",["consolation box"],"here have a box");
-new Thing("consolation box",["abfield,1-5"]);
+var box = new GenericThing("box",{
+	object: "cosmology",
+	amount: makeFunction(Rand,10,20)
+	
+});
+var consolationBox = new GenericThing("sorry, have a box",{
+	object: "cosmology",
+	amount: makeFunction(Rand,10,20)
+});
 
 function launchNest(what) {
-	if (!things[what]) what="error";
-	var Seed=make(what);
-	Seed.Grow(0);
+	var Seed=what.getInstance();
+	Seed.Grow();
 	Seed.List();
 }
 

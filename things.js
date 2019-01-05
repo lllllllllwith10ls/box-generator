@@ -43,16 +43,15 @@ class GenericThing {
 }
 
 class Cosmology {
-	constructor(name) {
-		this.verseName = name + "verse";
-		this.name = name + " altarca";
+	constructor() {
+		this.name = "altarca";
 		this.size = Rand(4,8);
 		var size = this.size;
 		this.type = "cosmology";
 		this.verses = [];
 		this.size2 = Rand(2,4);
 		for(size; size >= 0; size--) {
-			this.verses[size] = new Verse(size,this.verseName,this);
+			this.verses[size] = new Verse(size,this);
 		}
 		this.getInstance = function() {
 
@@ -70,10 +69,10 @@ class Cosmology {
 }
 
 class Verse {
-	constructor(tier,name,cosmology) {
+	constructor(tier,cosmology) {
 		this.cosmology = cosmology;
-		var tierNames = ["","multi-","mega-","giga-","tera-","peta-","exa-","zetta-","yotta-"];
-		this.name = tierNames[tier] + name;
+		var tierNames = ["uni","multi","mega","giga","tera","peta","exa","zetta","yotta"];
+		this.name = tierNames[tier] + "verse";
 		this.type = "verse";
 		this.tier = tier;
 		this.getInstance = function(clusterSize) {

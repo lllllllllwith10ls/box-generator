@@ -76,24 +76,53 @@ class Verse {
 		this.type = "verse";
 		this.tier = tier;
 		this.getInstance = function(clusterSize) {
-			var clusterNames = [""," cluster"," supercluster"," hypercluster"," ultracluster"]
+			var clusterNames = [""," cluster"," supercluster"," hypercluster"," ultracluster"];
+			let verseMinusOne = Math.max(0,verse-1);
 			if(clusterSize > 0) {
 				if(clusterSize === 1) {
-					return new Instance(this.name + clusterNames[clusterSize],[{
-						object: this,
-						otherVars: [0],
-						amount: makeFunction(Rand,10,20)
-					}],this);
+					if(this.tier-1 >= 0) {
+						return new Instance(this.name + clusterNames[clusterSize],[{
+							object: this,
+							otherVars: [0],
+							amount: makeFunction(Rand,10,20)
+						}],{
+							object: this.cosmology.verses[this.tier-1],
+							otherVars: [4],
+							amount: makeFunction(Rand,25,40)
+						}],this);
+					} else {
+						return new Instance(this.name + clusterNames[clusterSize],[{
+							object: this,
+							otherVars: [0],
+							amount: makeFunction(Rand,10,20)
+						}],this);
+					}
 				} else {
-					return new Instance(this.name + clusterNames[clusterSize],[{
-						object: this,
-						otherVars: [clusterSize-1],
-						amount: makeFunction(Rand,10,20)
-					},{
-						object: this,
-						otherVars: [clusterSize-2],
-						amount: makeFunction(Rand,25,40)
-					}],this);
+					if(this.tier-1 >= 0) {
+						return new Instance(this.name + clusterNames[clusterSize],[{
+							object: this,
+							otherVars: [clusterSize-1],
+							amount: makeFunction(Rand,10,20)
+						},{
+							object: this,
+							otherVars: [clusterSize-2],
+							amount: makeFunction(Rand,25,40)
+						},{
+							object: this.cosmology.verses[this.tier-1],
+							otherVars: [4],
+							amount: makeFunction(Rand,25,40)
+						}],this);
+					} else {
+						return new Instance(this.name + clusterNames[clusterSize],[{
+							object: this,
+							otherVars: [clusterSize-1],
+							amount: makeFunction(Rand,10,20)
+						},{
+							object: this,
+							otherVars: [clusterSize-2],
+							amount: makeFunction(Rand,25,40)
+						}],this);
+					}
 				}
 			} else {
 				if(tier === 0) {
@@ -103,15 +132,128 @@ class Verse {
 					}],this);
 				} else {
 					var size = Rand(2,4);
+					if(this.tier-2 >= 0) {
+						return new Instance(this.name + clusterNames[clusterSize],[{
+							object: this.cosmology.verses[this.tier-1],
+							otherVars: [size],
+							amount: makeFunction(Rand,10,20)
+						},{
+							object: this.cosmology.verses[this.tier-1],
+							otherVars: [size-1],
+							amount: makeFunction(Rand,25,40)
+						},{
+							object: this.cosmology.verses[this.tier-2],
+							otherVars: [4],
+							amount: makeFunction(Rand,25,40)
+						}],this);
+					} else if(this.tier-1 >= 0) {
+						return new Instance(this.name + clusterNames[clusterSize],[{
+							object: this.cosmology.verses[this.tier-1],
+							otherVars: [size],
+							amount: makeFunction(Rand,10,20)
+						},{
+							object: this.cosmology.verses[this.tier-1],
+							otherVars: [size-1],
+							amount: makeFunction(Rand,25,40)
+						}],this);
+					} else {
+						return new Instance(this.name + clusterNames[clusterSize],[{
+							object: this.cosmology.verses[this.tier-1],
+							otherVars: [size],
+							amount: makeFunction(Rand,10,20)
+						}],this);
+					}
+				}
+			}
+		}
+	}
+}
+let tierNames = ["uni","multi","mega","giga","tera","peta","exa","zetta","yotta"];
+class Civ {
+	constructor() {
+		this.name = randomName(4,10);
+		this.type = "civ";
+		this.getInstance = function(clusterSize,verse) {
+			let clusterNames = [""," cluster"," supercluster"," hypercluster"," ultracluster"];
+			if(clusterSize > 0) {
+				if(clusterSize === 1) {
+					if(verse-1 >= 0) {
+						return new Instance(this.name + "ian " + tierNames[verse] + "verse" + clusterNames[clusterSize],[{
+							object: this,
+							otherVars: [0,verse],
+							amount: makeFunction(Rand,10,20)
+						}],{
+							object: this,
+							otherVars: [4,verse-1],
+							amount: makeFunction(Rand,25,40)
+						}],this);
+					} else {
+						return new Instance(this.name + clusterNames[clusterSize],[{
+							object: this,
+							otherVars: [0,verse],
+							amount: makeFunction(Rand,10,20)
+						}],this);
+					}
+				} else {
+					if(verse-1 >= 0) {
+						return new Instance(this.name + "ian " + tierNames[verse] + "verse" + clusterNames[clusterSize],[{
+							object: this,
+							otherVars: [clusterSize-1,verse],
+							amount: makeFunction(Rand,10,20)
+						},{
+							object: this,
+							otherVars: [clusterSize-2,verse],
+							amount: makeFunction(Rand,25,40)
+						},{
+							object: this,
+							otherVars: [4,verse-1],
+							amount: makeFunction(Rand,25,40)
+						}],this);
+					} else {
+						return new Instance(this.name + clusterNames[clusterSize],[{
+							object: this,
+							otherVars: [clusterSize-1,verse],
+							amount: makeFunction(Rand,10,20)
+						},{
+							object: this,
+							otherVars: [clusterSize-2,verse],
+							amount: makeFunction(Rand,25,40)
+						}],this);
+					}
+				}
+			} else {
+				if(tier === 0) {
 					return new Instance(this.name + clusterNames[clusterSize],[{
-						object: this.cosmology.verses[this.tier-1],
-						otherVars: [size],
-						amount: makeFunction(Rand,10,20)
-					},{
-						object: this.cosmology.verses[this.tier-1],
-						otherVars: [size-1],
-						amount: makeFunction(Rand,25,40)
+						object: consolationBox,
+						amount: 1
 					}],this);
+				} else {
+					var size = Rand(2,4);
+					if(verse-2 >= 0) {
+						return new Instance(this.name + "ian " + tierNames[verse] + "verse" + clusterNames[clusterSize],[{
+							object: this.cosmology.verses[this.tier-1],
+							otherVars: [size,verse-1],
+							amount: makeFunction(Rand,10,20)
+						},{
+							object: this.cosmology.verses[this.tier-1],
+							otherVars: [size-1,verse-1],
+							amount: makeFunction(Rand,25,40)
+						},{
+							object: this.cosmology.verses[this.tier-2],
+							otherVars: [4,verse-2],
+							amount: makeFunction(Rand,25,40)
+						}],this);
+					} else {
+						return new Instance(this.name + clusterNames[clusterSize],[{
+							object: this.cosmology.verses[this.tier-1],
+							otherVars: [size,verse-1],
+							amount: makeFunction(Rand,10,20)
+						},{
+							object: this.cosmology.verses[this.tier-1],
+							otherVars: [size-1,verse-1],
+							amount: makeFunction(Rand,25,40)
+						}],this);
+					}
 				}
 			}
 		}
@@ -148,7 +290,7 @@ Instance.prototype.Grow = function() {
 				var toMake=this.children[i].object;
 			
 				if (toMake === "Cosmology") {
-					toMake = new Cosmology(randomName(3,10)).getInstance();;
+					toMake = new Cosmology(randomName(3,10)).getInstance();
 				} else if (this.children[i].otherVars) {
 					toMake = toMake.getInstance(...this.children[i].otherVars);
 				} else {
@@ -206,7 +348,7 @@ var box = new GenericThing("box",[{
 	object: "Cosmology",
 	amount: makeFunction(Rand,10,20)
 }]);
-var consolationBox = new GenericThing("sorry, have a box",[{
+var consolationBox = new GenericThing("not implemented, have a box",[{
 	object: "Cosmology",
 	amount: makeFunction(Rand,10,20)
 }]);

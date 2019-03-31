@@ -287,9 +287,9 @@ Instance.prototype.Grow = function() {
 			}
 			let makeChance = 1;
 			if(this.children[i].chance instanceof Function) {
-				makeAmount = this.children[i].chance();
+				makeChance = this.children[i].chance();
 			} else {
-				makeAmount = this.children[i].chance;
+				makeChance = this.children[i].chance;
 			}
 			if(Math.random() < makeChance) {
 				for (var ii=0;ii<makeAmount;ii++) {

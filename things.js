@@ -285,7 +285,7 @@ Instance.prototype.Grow = function() {
 			} else {
 				makeAmount = this.children[i].amount;
 			}
-			let makeChance;
+			let makeChance = 1;
 			if(this.children[i].chance instanceof Function) {
 				makeAmount = this.children[i].chance();
 			} else {

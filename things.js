@@ -76,8 +76,7 @@ class Verse {
 		this.type = "verse";
 		this.tier = tier;
 		this.getInstance = function(clusterSize) {
-			var clusterNames = [""," cluster"," supercluster"," hypercluster"," ultracluster"];
-			let verseMinusOne = Math.max(0,verse-1);
+			var clusterNames = [""," cluster"," supercluster"," hypercluster"," ultracluster","cohort"];
 			if(clusterSize > 0) {
 				if(clusterSize === 1) {
 					if(this.tier-1 >= 0) {
@@ -87,7 +86,7 @@ class Verse {
 							amount: makeFunction(Rand,10,20)
 						},{
 							object: this.cosmology.verses[this.tier-1],
-							otherVars: [4],
+							otherVars: [5],
 							amount: makeFunction(Rand,25,40)
 						}],this);
 					} else {
@@ -109,7 +108,7 @@ class Verse {
 							amount: makeFunction(Rand,25,40)
 						},{
 							object: this.cosmology.verses[this.tier-1],
-							otherVars: [4],
+							otherVars: [5],
 							amount: makeFunction(Rand,25,40)
 						}],this);
 					} else {
@@ -131,7 +130,7 @@ class Verse {
 						amount: 1
 					}],this);
 				} else {
-					var size = Rand(2,4);
+					var size = Rand(2,5);
 					if(this.tier-2 >= 0) {
 						return new Instance(this.name + clusterNames[clusterSize],[{
 							object: this.cosmology.verses[this.tier-1],
@@ -143,7 +142,7 @@ class Verse {
 							amount: makeFunction(Rand,25,40)
 						},{
 							object: this.cosmology.verses[this.tier-2],
-							otherVars: [4],
+							otherVars: [5],
 							amount: makeFunction(Rand,25,40)
 						}],this);
 					} else if(this.tier-1 >= 0) {
@@ -174,7 +173,7 @@ class Civ {
 		this.name = randomName(4,10);
 		this.type = "civ";
 		this.getInstance = function(clusterSize,verse) {
-			let clusterNames = [""," cluster"," supercluster"," hypercluster"," ultracluster"];
+			let clusterNames = [""," cluster"," supercluster"," hypercluster"," ultracluster","cohort"];
 			if(clusterSize > 0) {
 				if(clusterSize === 1) {
 					if(verse-1 >= 0) {
@@ -184,7 +183,7 @@ class Civ {
 							amount: makeFunction(Rand,10,20)
 						},{
 							object: this,
-							otherVars: [4,verse-1],
+							otherVars: [5,verse-1],
 							amount: makeFunction(Rand,25,40)
 						}],this);
 					} else {
@@ -206,7 +205,7 @@ class Civ {
 							amount: makeFunction(Rand,25,40)
 						},{
 							object: this,
-							otherVars: [4,verse-1],
+							otherVars: [5,verse-1],
 							amount: makeFunction(Rand,25,40)
 						}],this);
 					} else {
@@ -240,7 +239,7 @@ class Civ {
 							amount: makeFunction(Rand,25,40)
 						},{
 							object: this.cosmology.verses[this.tier-2],
-							otherVars: [4,verse-2],
+							otherVars: [5,verse-2],
 							amount: makeFunction(Rand,25,40)
 						}],this);
 					} else {
@@ -259,8 +258,8 @@ class Civ {
 		}
 	}
 }
-var instances = [];
-var instanceN = 0;
+let instances = [];
+let instanceN = 0;
 class Instance {
 	constructor(name,children,type) {
 		this.name=name;
@@ -277,8 +276,8 @@ class Instance {
 
 Instance.prototype.Grow = function() {
 	if (this.grown==false) {
-		var children = [];
-		for (var i in this.children) {
+		let children = [];
+		for (let i in this.children) {
 			
 			var makeAmount;
 			if(this.children[i].amount instanceof Function) {
@@ -286,18 +285,26 @@ Instance.prototype.Grow = function() {
 			} else {
 				makeAmount = this.children[i].amount;
 			}
-			for (var ii=0;ii<makeAmount;ii++) {
-				var toMake=this.children[i].object;
-			
-				if (toMake === "Cosmology") {
-					toMake = new Cosmology(randomName(3,10)).getInstance();
-				} else if (this.children[i].otherVars) {
-					toMake = toMake.getInstance(...this.children[i].otherVars);
-				} else {
-					toMake = toMake.getInstance();
+			let makeChance;
+			if(this.children[i].chance instanceof Function) {
+				makeAmount = this.children[i].chance();
+			} else {
+				makeAmount = this.children[i].chance;
+			}
+			if(Math.random() < makeChance) {
+				for (var ii=0;ii<makeAmount;ii++) {
+					var toMake=this.children[i].object;
+
+					if (toMake === "Cosmology") {
+						toMake = new Cosmology(randomName(3,10)).getInstance();
+					} else if (this.children[i].otherVars) {
+						toMake = toMake.getInstance(...this.children[i].otherVars);
+					} else {
+						toMake = toMake.getInstance();
+					}
+					children.push(toMake);
+					toMake.parent = this;
 				}
-				children.push(toMake);
-				toMake.parent = this;
 			}
 		}
 		this.grown=true;
@@ -307,7 +314,7 @@ Instance.prototype.Grow = function() {
 
 Instance.prototype.List=function()
 {
-	var str="";
+	let str="";
 	for (var i in this.children)
 	{
 		str+='<div id="div'+this.children[i].n+'">'+this.children[i].name+'</div>';

@@ -85,7 +85,7 @@ class Verse {
 							object: this,
 							otherVars: [0],
 							amount: makeFunction(Rand,10,20)
-						}],{
+						},{
 							object: this.cosmology.verses[this.tier-1],
 							otherVars: [4],
 							amount: makeFunction(Rand,25,40)
@@ -182,7 +182,7 @@ class Civ {
 							object: this,
 							otherVars: [0,verse],
 							amount: makeFunction(Rand,10,20)
-						}],{
+						},{
 							object: this,
 							otherVars: [4,verse-1],
 							amount: makeFunction(Rand,25,40)

@@ -5,14 +5,17 @@ function choose(array) {
 function Rand(min,max) {
 	return parseFloat(Math.floor(Math.random()*(max-min+1)))+parseFloat(min);
 }
+function chance(prob) {
+	return Math.random() > prob ? 1 : 0;
+}
 
 function randomName(min,max) {
-	var length = Rand(min,max);
-	var consonantsInARow = 0;
-	var vowelsInARow = 0;
-	var consonants = ["b","c","d","f","g","h",'j','k','l','m','n','p','q','r','s','t','v','w','x','y','z'];
-	var vowels = ['a','e','i','o','u',];
-	var name = "";
+	let length = Rand(min,max);
+	let consonantsInARow = 0;
+	let vowelsInARow = 0;
+	let consonants = ["b","c","d","f","g","h",'j','k','l','m','n','p','q','r','s','t','v','w','x','y','z'];
+	let vowels = ['a','e','i','o','u',];
+	let name = "";
 	for(length; length >= 0; length--) {
 		if((Math.random() > 0.5 || consonantsInARow >= 2) && vowelsInARow < 2) {
 			name += choose(vowels);
@@ -30,234 +33,127 @@ function randomName(min,max) {
 function makeFunction(func,...theArgs) {
 	return function(){ return func(...theArgs); };
 }
-
+let things = {};
 class GenericThing {
-	constructor(name,contains) {
+	constructor(id,name,contains,type) {
 		this.name = name;
+		if(!type) {
+			this.type = this.name;
+		} else {
+			this.type = type;
+		}
 		this.contains = contains;
 		this.getInstance = function() {
 
-			return new Instance(this.name,contains,this);
+			return new Instance(this.name,contains,this.type);
 		}
+		things[id] = this;
 	}
 }
 
-class Cosmology {
-	constructor() {
-		this.name = "altarca";
-		this.size = Rand(4,8);
-		var size = this.size;
-		this.type = "cosmology";
-		this.verses = [];
-		this.size2 = Rand(2,4);
-		for(size; size >= 0; size--) {
-			this.verses[size] = new Verse(size,this);
-		}
-		this.getInstance = function() {
-
-			return new Instance(this.name,[{
-				object: this.verses[this.size],
-				otherVars: [this.size2],
-				amount: makeFunction(Rand,10,20)
-			},{
-				object: this.verses[this.size],
-				otherVars: [this.size2-1],
-				amount: makeFunction(Rand,25,40)
-			}],this);
-		}
-	}
-}
-
-class Verse {
-	constructor(tier,cosmology) {
-		this.cosmology = cosmology;
-		var tierNames = ["uni","multi","mega","giga","tera","peta","exa","zetta","yotta"];
-		this.name = tierNames[tier] + "verse";
-		this.type = "verse";
-		this.tier = tier;
-		this.getInstance = function(clusterSize) {
-			var clusterNames = [""," cluster"," supercluster"," hypercluster"," ultracluster","cohort"];
-			if(clusterSize > 0) {
-				if(clusterSize === 1) {
-					if(this.tier-1 >= 0) {
-						return new Instance(this.name + clusterNames[clusterSize],[{
-							object: this,
-							otherVars: [0],
-							amount: makeFunction(Rand,10,20)
-						},{
-							object: this.cosmology.verses[this.tier-1],
-							otherVars: [5],
-							amount: makeFunction(Rand,25,40)
-						}],this);
-					} else {
-						return new Instance(this.name + clusterNames[clusterSize],[{
-							object: this,
-							otherVars: [0],
-							amount: makeFunction(Rand,10,20)
-						}],this);
-					}
-				} else {
-					if(this.tier-1 >= 0) {
-						return new Instance(this.name + clusterNames[clusterSize],[{
-							object: this,
-							otherVars: [clusterSize-1],
-							amount: makeFunction(Rand,10,20)
-						},{
-							object: this,
-							otherVars: [clusterSize-2],
-							amount: makeFunction(Rand,25,40)
-						},{
-							object: this.cosmology.verses[this.tier-1],
-							otherVars: [5],
-							amount: makeFunction(Rand,25,40)
-						}],this);
-					} else {
-						return new Instance(this.name + clusterNames[clusterSize],[{
-							object: this,
-							otherVars: [clusterSize-1],
-							amount: makeFunction(Rand,10,20)
-						},{
-							object: this,
-							otherVars: [clusterSize-2],
-							amount: makeFunction(Rand,25,40)
-						}],this);
-					}
-				}
-			} else {
-				if(tier === 0) {
-					return new Instance(this.name + clusterNames[clusterSize],[{
-						object: consolationBox,
-						amount: 1
-					}],this);
-				} else {
-					var size = Rand(2,5);
-					if(this.tier-2 >= 0) {
-						return new Instance(this.name + clusterNames[clusterSize],[{
-							object: this.cosmology.verses[this.tier-1],
-							otherVars: [size],
-							amount: makeFunction(Rand,10,20)
-						},{
-							object: this.cosmology.verses[this.tier-1],
-							otherVars: [size-1],
-							amount: makeFunction(Rand,25,40)
-						},{
-							object: this.cosmology.verses[this.tier-2],
-							otherVars: [5],
-							amount: makeFunction(Rand,25,40)
-						}],this);
-					} else if(this.tier-1 >= 0) {
-						return new Instance(this.name + clusterNames[clusterSize],[{
-							object: this.cosmology.verses[this.tier-1],
-							otherVars: [size],
-							amount: makeFunction(Rand,10,20)
-						},{
-							object: this.cosmology.verses[this.tier-1],
-							otherVars: [size-1],
-							amount: makeFunction(Rand,25,40)
-						}],this);
-					} else {
-						return new Instance(this.name + clusterNames[clusterSize],[{
-							object: this.cosmology.verses[this.tier-1],
-							otherVars: [size],
-							amount: makeFunction(Rand,10,20)
-						}],this);
-					}
-				}
-			}
-		}
-	}
+function newCosmology() {
+	name = "altarca";
+	let size = Rand(4,8);
+	let type = "cosmology";
+		
+	let size2 = Rand(2,5);
+	return new Instance(name,[{
+		object: newVerse,
+		otherVars: [size,size2],
+		amount: makeFunction(Rand,10,20)
+	},{
+		object: newVerse,
+		otherVars: [size,size2-1],
+		amount: makeFunction(Rand,20,40)
+	}],type);
 }
 let tierNames = ["uni","multi","mega","giga","tera","peta","exa","zetta","yotta"];
+
+function newVerse(tier, clusterSize, civ, civLevel=0) {
+	let name = tierNames[tier] + "verse";
+	let clusterNames = [""," cluster"," supercluster"," hypercluster"," ultracluster"," cohort"];
+	let sizeNames = ["","","dwarf ","medium ","giant ","supergiant "];
+	let verse = false;
+	let clusterSize2 = clusterSize;
+	if(clusterSize < 1) {
+		clusterSize2 = Rand(2,5) + 1;
+		verse = true;
+	}
+	if(verse) {
+		tier--;
+	}
+	let otherVars = [];
+	if(civ) {
+		if(civ instanceof Array) {
+			if(Math.random() > 0.8 && civ.length > 0) {
+				otherVars.push(civ[Math.floor(Math.random()*civ.length)],Math.random()*2);
+			} else {
+				otherVars.push(null,0);
+			}
+		} else {
+			if(Math.random() < 1 - Math.pow(0.5,civLevel)) {
+				otherVars.push(civ,civLevel*(Math.random()*2+1));
+			} else {
+				otherVars.push(null,0);
+			}
+		}
+	} else {
+		civ = generateCivs();
+		otherVars.push(civ,0);
+	}
+	let civName = otherVars[0] instanceof Civ ? otherVars[0].name + "ian " : "";
+	if(tier < 0) {
+		return new Instance(civName + name,[{
+			object: consolationBox,
+			amount: 1
+		}],name);
+	} else if(clusterSize2 === 1) {
+		return new Instance(civName + name + clusterNames[clusterSize],[{
+			object: newVerse,
+			otherVars: [tier,clusterSize2-1].concat(otherVars),
+			amount: makeFunction(Rand,10,20)
+		}],name);
+	} else if(clusterSize2 > 1) {
+		let stuff = [{
+			object: newVerse,
+			otherVars: [tier,clusterSize2-1].concat(otherVars),
+			amount: makeFunction(Rand,10,20)
+		},{
+			object: newVerse,
+			otherVars: [tier,clusterSize2-2].concat(otherVars),
+			amount: makeFunction(Rand,20,40)
+		}];
+		if(tier > 0) {
+			stuff.push({
+			object: newVerse,
+			otherVars: [tier-1,5].concat(otherVars),
+			amount: makeFunction(Rand,20,40)
+			});
+		}
+		return new Instance(civName + (verse ? sizeNames[clusterSize2-1] : "") + name + clusterNames[clusterSize],stuff,name);
+	}
+}
+function generateCivs() {
+	let civs = [];
+	while(true) {
+		let number = Math.random();
+		if(number < 0.05) {
+			break;
+		}
+		if(number > 0.99) {
+			civs.push(new Civ());
+		}
+	}
+	return civs;
+}
 class Civ {
 	constructor() {
 		this.name = randomName(4,10);
 		this.type = "civ";
-		this.getInstance = function(clusterSize,verse) {
-			let clusterNames = [""," cluster"," supercluster"," hypercluster"," ultracluster","cohort"];
-			if(clusterSize > 0) {
-				if(clusterSize === 1) {
-					if(verse-1 >= 0) {
-						return new Instance(this.name + "ian " + tierNames[verse] + "verse" + clusterNames[clusterSize],[{
-							object: this,
-							otherVars: [0,verse],
-							amount: makeFunction(Rand,10,20)
-						},{
-							object: this,
-							otherVars: [5,verse-1],
-							amount: makeFunction(Rand,25,40)
-						}],this);
-					} else {
-						return new Instance(this.name + clusterNames[clusterSize],[{
-							object: this,
-							otherVars: [0,verse],
-							amount: makeFunction(Rand,10,20)
-						}],this);
-					}
-				} else {
-					if(verse-1 >= 0) {
-						return new Instance(this.name + "ian " + tierNames[verse] + "verse" + clusterNames[clusterSize],[{
-							object: this,
-							otherVars: [clusterSize-1,verse],
-							amount: makeFunction(Rand,10,20)
-						},{
-							object: this,
-							otherVars: [clusterSize-2,verse],
-							amount: makeFunction(Rand,25,40)
-						},{
-							object: this,
-							otherVars: [5,verse-1],
-							amount: makeFunction(Rand,25,40)
-						}],this);
-					} else {
-						return new Instance(this.name + clusterNames[clusterSize],[{
-							object: this,
-							otherVars: [clusterSize-1,verse],
-							amount: makeFunction(Rand,10,20)
-						},{
-							object: this,
-							otherVars: [clusterSize-2,verse],
-							amount: makeFunction(Rand,25,40)
-						}],this);
-					}
-				}
-			} else {
-				if(tier === 0) {
-					return new Instance(this.name + clusterNames[clusterSize],[{
-						object: consolationBox,
-						amount: 1
-					}],this);
-				} else {
-					var size = Rand(2,4);
-					if(verse-2 >= 0) {
-						return new Instance(this.name + "ian " + tierNames[verse] + "verse" + clusterNames[clusterSize],[{
-							object: this.cosmology.verses[this.tier-1],
-							otherVars: [size,verse-1],
-							amount: makeFunction(Rand,10,20)
-						},{
-							object: this.cosmology.verses[this.tier-1],
-							otherVars: [size-1,verse-1],
-							amount: makeFunction(Rand,25,40)
-						},{
-							object: this.cosmology.verses[this.tier-2],
-							otherVars: [5,verse-2],
-							amount: makeFunction(Rand,25,40)
-						}],this);
-					} else {
-						return new Instance(this.name + clusterNames[clusterSize],[{
-							object: this.cosmology.verses[this.tier-1],
-							otherVars: [size,verse-1],
-							amount: makeFunction(Rand,10,20)
-						},{
-							object: this.cosmology.verses[this.tier-1],
-							otherVars: [size-1,verse-1],
-							amount: makeFunction(Rand,25,40)
-						}],this);
-					}
-				}
-			}
-		}
+		civils.push(this);
 	}
 }
+let civils = [];
 let instances = [];
 let instanceN = 0;
 class Instance {
@@ -279,32 +175,27 @@ Instance.prototype.Grow = function() {
 		let children = [];
 		for (let i in this.children) {
 			
-			var makeAmount;
+			let makeAmount;
 			if(this.children[i].amount instanceof Function) {
 				makeAmount = this.children[i].amount();
 			} else {
 				makeAmount = this.children[i].amount;
 			}
-			let makeChance = 1;
-			if(this.children[i].chance instanceof Function) {
-				makeChance = this.children[i].chance();
-			} else {
-				makeChance = this.children[i].chance;
-			}
-			if(Math.random() < makeChance) {
-				for (var ii=0;ii<makeAmount;ii++) {
-					var toMake=this.children[i].object;
+			for (let ii=0;ii<makeAmount;ii++) {
+				let toMake=this.children[i].object;
 
-					if (toMake === "Cosmology") {
-						toMake = new Cosmology(randomName(3,10)).getInstance();
-					} else if (this.children[i].otherVars) {
-						toMake = toMake.getInstance(...this.children[i].otherVars);
+				if (toMake instanceof Function) {
+					if(this.children[i].otherVars) {
+						let otherVars = this.children[i].otherVars
+						toMake = toMake(...otherVars);
 					} else {
-						toMake = toMake.getInstance();
+						toMake = toMake();
 					}
-					children.push(toMake);
-					toMake.parent = this;
+				} else if(typeof toMake === "string") {
+					toMake = getInstanceById(toMake);
 				}
+				children.push(toMake);
+				toMake.parent = this;
 			}
 		}
 		this.grown=true;
@@ -315,12 +206,12 @@ Instance.prototype.Grow = function() {
 Instance.prototype.List=function()
 {
 	let str="";
-	for (var i in this.children)
+	for (let i in this.children)
 	{
 		str+='<div id="div'+this.children[i].n+'">'+this.children[i].name+'</div>';
 	}
 	if (this.children.length>0) {
-		document.getElementById("div"+this.n).innerHTML='<a href="javascript:toggle('+this.n+');" style="padding-right:8px;" alt="archetype : '+(this.type.name)+'" title="archetype : '+(this.type.name)+'"><span class="arrow" id="arrow'+this.n+'">+</span> '+this.name+'</a><div id="container'+this.n+'" class="thing" style="display:none;'+'">'+str+'</div>';
+		document.getElementById("div"+this.n).innerHTML='<a href="javascript:toggle('+this.n+');" style="padding-right:8px;" alt="archetype : '+(this.type)+'" title="archetype : '+(this.type)+'"><span class="arrow" id="arrow'+this.n+'">+</span> '+this.name+'</a><div id="container'+this.n+'" class="thing" style="display:none;'+'">'+str+'</div>';
 	}
 	else document.getElementById("div"+this.n).innerHTML='<span class="emptyThing">'+this.name+'</span>';
 }
@@ -330,7 +221,7 @@ function toggle(id)
 	if (instances[id].display==false)
 	{
 
-		for (var i in instances[id].children)
+		for (let i in instances[id].children)
 		{
 			if (instances[id].children[i].grown==false) {
 				instances[id].children[i].Grow(0);
@@ -351,17 +242,119 @@ function toggle(id)
 	}
 }
 
-var box = new GenericThing("box",[{
-	object: "Cosmology",
+function getInstanceById(thing) {
+	return things[thing].getInstance();
+}
+
+let box = new GenericThing("box","box",[{
+	object: "schemafield",
 	amount: makeFunction(Rand,10,20)
 }]);
-var consolationBox = new GenericThing("not implemented, have a box",[{
-	object: "Cosmology",
+let consolationBox = new GenericThing("consolationBox","not implemented, have a box",[{
+	object: "schemafield",
+	amount: makeFunction(Rand,10,20)
+}],"consolation box");
+
+let schemafield = new GenericThing("schemafield","schemafield",[{
+	object: "stableSchemafield",
+	amount: makeFunction(Rand,10,20)
+},{
+	object: "unstableSchemafield",
+	amount: makeFunction(Rand,10,20)
+},{
+	object: "chaoticSchemafield",
+	amount: makeFunction(Rand,10,20)
+}]);
+let stableSchemafield = new GenericThing("stableSchemafield","organized schemafield region",[{
+	object: "patacosmology",
+	amount: makeFunction(Rand,10,20)
+},{
+	object: "binaryfield",
+	amount: makeFunction(Rand,10,20)
+}],"schemafield section");
+let unstableSchemafield = new GenericThing("unstableSchemafield","disorganized schemafield region",[{
+	object: schemafieldThing,
+	amount: makeFunction(Rand,20,30)
+}],"schemafield section");
+
+function schemafieldThing() {
+	let make = choose(schemafieldContents);
+	if(make === "altarca") {
+		return newCosmology();
+	} else if(make === "verse") {
+		return newVerse(Rand(0,8),Rand(0,5));
+	} else {
+		return make.getInstance();
+	}
+}
+
+let chaoticSchemafield = new GenericThing("chaoticSchemafield","chaotic schemafield region",[{
+	object: "conceptSoup",
+	amount: makeFunction(Rand,20,30)
+}],"schemafield section");
+let binaryfield = new GenericThing("binaryfield","binaryfield",[{
+	object: schemafieldThing,
+	amount: makeFunction(Rand,10,20)
+},{
+	object: "potatoverse",
+	amount: 1
+}]);
+
+
+
+let patacosmology = new GenericThing("patacosmology","patacosmology",[{
+	object: "patacosmology",
+	amount: makeFunction(Rand,10,20)
+},{
+	object: "metacosmology",
+	amount: makeFunction(chance,0.2)
+}]);
+let metacosmology = new GenericThing("metacosmology","metacosmology",[{
+	object: newCosmology,
+	amount: makeFunction(Rand,10,20)
+},{
+	object: "maiorverse",
+	amount: makeFunction(Rand,0,4)
+},{
+	object: "metacosmology",
+	amount: makeFunction(chance,0.2)
+}]);
+
+let maiorverse = new GenericThing("maiorverse","maiorverse",[{
+	object: "selfverse",
 	amount: makeFunction(Rand,10,20)
 }]);
 
+let selfverse = new GenericThing("selfverse","selfverse",[{
+	object: "selfverse",
+	amount: makeFunction(Rand,1,5)
+},{
+	object: newCosmology,
+	amount: makeFunction(chance,0.2)
+}]);
+
+
+let conceptSoup = new GenericThing("conceptSoup","conceptual soup",[{
+	object: "consolationBox",
+	amount: 1
+}]);
+let potatoverse = new GenericThing("potatoverse","potatoverse",[{
+	object: "potato",
+	amount: makeFunction(Rand,10,20)
+}]);
+let potato = new GenericThing("potato","potato",[{
+	object: "consolationBox",
+	amount: 1
+}],);
+
+
+
+let schemafieldContents = [patacosmology, metacosmology, "altarca", "verse", "verse", binaryfield, maiorverse, selfverse];
+
+
+
 function launchNest(what) {
-	var Seed=what.getInstance();
+	let Seed=what.getInstance();
 	Seed.Grow();
 	Seed.List();
 }

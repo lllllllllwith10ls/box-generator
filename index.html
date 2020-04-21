@@ -1,45 +1,54 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Box generator</title>
-		<script type="text/javascript" src="things.js"></script>
-		<style>
-			.thing{
-				padding:2px;
-				margin-left:16px;
-				background-color:#ddd;
-				border:2px solid #fff;
-				border-right:0px none;
-				padding-right:0px;
-			}
-			.emptyThing a{
-				text-decoration:underline;
-			}
-			a{
-				color:#000;
-				text-decoration:none;
-			}
-
-			a:hover{
-				color:#fff;
-				background-color:#000;
-			}
-
-			a:active{
-				color:#000;
-				background-color:#fff;
-			}
-		</style>
-
 	</head>
-	<body>
-		<div id="debug"></div>
-
-
+	<body onload="startGame()">
+		<canvas id="game area" width="500" height="500" style="border:1px solid #c3c3c3;">
+		</canvas>
+		<script type="text/javascript" src="basics.js"></script>
 		<script>
-			document.getElementById("debug").innerHTML="<div id=\"div0\" class=\"thing\"></div>";
 
-			launchNest(box);
+			let keys = {
+				87: false,
+				65: false,
+				83: false,
+				68: false
+			}
+			let mouse = {
+				pos: new Vector(0,0)
+			}
+			let ctx = canvas.getContext("2d");
+			let interval;
+			function startGame() {
+				interval = setInterval(updateGame, 20);
+				window.addEventListener("mousedown", function (e) {
+					mouse.down = true;
+				});
+				window.addEventListener("mousemove", function (e) {
+					let margin = document.getElementById("game area").getBoundingClientRect();
+					mouse.pos.x = e.clientX - margin.left;
+					mouse.pos.y = e.clientY - margin.top;
+				});
+				window.addEventListener("mouseup", function (e) {
+					mouse.down = false;
+
+				});
+				window.addEventListener('keydown', function (e) {
+					e.preventDefault();
+					keys[e.keyCode] = true;
+				});
+				window.addEventListener('keyup', function (e) {
+					keys[e.keyCode] = false;
+				});
+			};
+			function clear() {
+				ctx.clearRect(0, 0, canvas.length, canvas.height);
+			};
+			function stop() {
+				clearInterval(interval);
+			};
 		</script>
+		<p>Health: <span id="hp">5</span></p>
+		<p>Wave: <span id="wave">5</span></p>
 	</body>
 </html>

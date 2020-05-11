@@ -19,7 +19,10 @@ function Rand(min,max) {
 function chance(prob) {
 	return Math.random() > prob ? 1 : 0;
 }
-
+function rename(object, name) {
+  object.name = name;
+  return object;
+}
 function randomName(min,max) {
 	let length = Rand(min,max);
 	let consonantsInARow = 0;
@@ -112,7 +115,7 @@ function newVerse(tier, clusterSize, civ, civLevel=0) {
 		civ = generateCivs();
 		otherVars.push(civ,0);
 	}*/
-	let civName = otherVars[0] instanceof Civ ? otherVars[0].name + "ian " : "";
+	let civName = /*otherVars[0] instanceof Civ ? otherVars[0].name + "ian " :*/ "";
 	if(tier < 0) {
 		return newUniverse();
 	} else if(clusterSize2 === 1) {
@@ -141,7 +144,7 @@ function newVerse(tier, clusterSize, civ, civLevel=0) {
 		return new Instance(civName + (verse ? sizeNames[clusterSize2-1] : "") + name + clusterNames[clusterSize],stuff,name);
 	}
 }
-function generateCivs() {
+/*function generateCivs() {
 	let civs = [];
 	while(true) {
 		let number = Math.random();
@@ -154,7 +157,7 @@ function generateCivs() {
 	}
 	return civs;
 }
-
+*/
 function newUniverse() {
 	name = "universe";
 	let size = Rand(3,5);
@@ -388,10 +391,55 @@ function solarSystem(galaxy) {
 }
 
 function star(type) {
-	return new Instance(type,[{
-		object: "consolationBox",
-		amount: 1
-	}],"star");
+	if(type == "brown dwarf") {
+    return rename(gasGiant(Math.random()> 0.9 ? "cool" : "cold"), "brown dwarf");
+  }
+  if(type == "neutron star") {
+    return new Instance(type,[{
+      object: "neutronStarCrust",
+      amount: 1
+    },{
+      object: "neutronStarMantle",
+      amount: 1
+    },{
+      object: "neutronStarCore",
+      amount: 1
+    }],"star");
+  }
+  if(type == "white dwarf") {
+    return new Instance(type,[{
+      object: "electronDegenerateMatter",
+      amount: makeFunction(Rand,200,300)
+    }],"star");
+  }
+  if(type == "black hole") {
+    return new Instance(type,[{
+      object: "consolationBox",
+      amount: 1
+    }],"star");
+  }
+  return new Instance(type,[{
+    object: "starCorona",
+    amount: 1
+  },{
+    object: starLayer,
+    amount: 1,
+    otherVars: ["convective zone"]
+  },{
+    object: starLayer,
+    amount: 1,
+    otherVars: ["radiative zone"]
+  },{
+    object: starLayer,
+    amount: 1,
+    otherVars: ["core"]
+  }],"star");
+}
+function starLayer(name) {
+  return new Instance(name,[{
+    object: "plasma",
+    amount: makeFunction(Rand,80,100),
+  }],"star layer");
 }
 function generatePlanets(star) {
   let systems =      ["inner","outer"    ,"far"];
@@ -623,13 +671,16 @@ function asteroid(temp, moon) {
 }
 function dwarf(temp, moon) {
   let hasAtmosphere = false;
-  if(Math.random() * 100 > 50) {
+  if(Math.random() * 100 > 30 && temp !== "frozen") {
     hasAtmosphere = true;
   }
+  let lifeStuff = oceansAndLife(temp,hasAtmosphere);
+  let lifeType = lifeStuff[1];
+  let species = lifeStuff[2];
   stuff = [{
     object: crust,
 		amount: 1,
-    otherVars: [temp,"small",hasAtmosphere],
+    otherVars: [temp,"small",lifeStuff],
   },{
     object: mantle,
 		amount: 1,
@@ -676,17 +727,20 @@ function dwarf(temp, moon) {
   } else {
     name = "small moon";
   }
-	return new Instance(temp + " " + name,stuff,moon ? "dwarf planet" : "moon");
+	return new Instance(temp + " " + name + (lifeType !== "none" ? " with " + lifeType : ""),stuff,moon ? "dwarf planet" : "moon");
 }
 function terraPlanet(temp,moon) {
 	let hasAtmosphere = false;
-  if(Math.random() * 100 > 30 && temp !== "scorched" && temp !== "frozen") {
+  if(Math.random() * 100 > 30 && temp !== "frozen") {
     hasAtmosphere = true;
   }
+  let lifeStuff = oceansAndLife(temp,hasAtmosphere);
+  let lifeType = lifeStuff[1];
+  let species = lifeStuff[2];
   stuff = [{
     object: crust,
 		amount: 1,
-    otherVars: [temp,"medium",hasAtmosphere],
+    otherVars: [temp,"medium",lifeStuff],
   },{
     object: mantle,
 		amount: 1,
@@ -727,15 +781,18 @@ function terraPlanet(temp,moon) {
   } else {
     name = "large moon";
   }
-  return new Instance(temp + " " + name,stuff,moon ? "terrestrial planet" : "moon");
+  return new Instance(temp + " " + name + (lifeType !== "none" ? " with " + lifeType : ""),stuff,moon ? "terrestrial planet" : "moon");
 }
 function superEarth(temp,moon) {
 	
 	
+  let lifeStuff = oceansAndLife(temp,true);
+  let lifeType = lifeStuff[1];
+  let species = lifeStuff[2];
   stuff = [{
     object: crust,
 		amount: 1,
-    otherVars: [temp,"large",true],
+    otherVars: [temp,"large",lifeStuff],
   },{
     object: mantle,
 		amount: 1,
@@ -790,7 +847,63 @@ function superEarth(temp,moon) {
   } else {
     name = "large moon";
   }
-  return new Instance(temp + " " + name,stuff,moon ? "super earth" : "moon");
+  return new Instance(temp + " " + name + (lifeType !== "none" ? " with " + lifeType : ""),stuff,moon ? "super earth" : "moon");
+}
+function oceansAndLife(temp,hasAtmosphere) {
+  
+  let oceans = false;
+  let oceanType = "";
+  switch(temp) {
+    case "scorched":
+      oceans = true;
+      oceanType = "lavaOcean";
+      break;
+    case "hot":
+      if(Math.random() > 0.8 && hasAtmosphere)oceans = true;
+      oceanType = "lavaOcean";
+      break;
+    case "warm":
+      if(Math.random() > 0.7 && hasAtmosphere)oceans = true;
+      oceanType = "waterOcean";
+      break;
+    case "temperate":
+      if(Math.random() > 0.3 && hasAtmosphere)oceans = true;
+      oceanType = "waterOcean";
+      break;
+    case "cool":
+      if(Math.random() > 0.4 && hasAtmosphere)oceans = true;
+      oceanType = "waterOcean";
+      break;
+    case "cold":
+      if(Math.random() > 0.7 && hasAtmosphere)oceans = true;
+      oceanType = "coldOcean";
+      break;
+    case "frozen":
+      oceans = false;
+      break;
+  }
+  let life = false;
+  let lifeType = "none";
+  let species = [];
+  if(Math.random() < 0.5 && oceanType === "waterOcean" && oceans) {
+    life = true;
+    lifeType = "proto-life";
+    if(Math.random() < 0.8) {
+      life = true;
+      lifeType = "prokaryotic life";
+      species = generateLife(lifeType);
+    }
+  }
+  return [oceanType,lifeType,species];
+}
+function generateLife(type) {
+  let result = [];
+  if(type === "prokaryotic life") {
+    for(let i = 0; i < 200; i++) {
+      result.push(new Prokaryote());
+    }
+  }
+  return result;
 }
 function gasGiant(temp) {
   stuff = [{
@@ -913,6 +1026,7 @@ function mantle(size) {
   }
   return new Instance("mantle",stuff,"mantle");
 }
+
 function jovialMantle() {
   let amount = Rand(75,125);
   let stuff = [];
@@ -1035,7 +1149,11 @@ function jovialAtmosphere(temp) {
   }
   return new Instance("atmosphere",stuff,"atmosphere");
 }
-function crust(temp,size,hasAtmosphere) {
+function crust(temp,size,lifeStuff) {
+  let oceans = lifeStuff[0];
+  let lifeType = lifeStuff[1];
+  let species = lifeStuff[2];
+  
   let amount = 0;
   switch(size) {
     case "large":
@@ -1048,37 +1166,6 @@ function crust(temp,size,hasAtmosphere) {
       amount = 5;
       break;
   }
-  let oceans = false;
-  let oceanType = lavaOcean;
-  switch(temp) {
-    case "scorched":
-      oceans = true;
-      oceanType = "lavaOcean";
-      break;
-    case "hot":
-      if(Math.random() > 0.8 && hasAtmosphere)oceans = true;
-      oceanType = "lavaOcean";
-      break;
-    case "warm":
-      if(Math.random() > 0.9 && hasAtmosphere)oceans = true;
-      oceanType = "waterOcean";
-      break;
-    case "temperate":
-      if(Math.random() > 0.5 && hasAtmosphere)oceans = true;
-      oceanType = "waterOcean";
-      break;
-    case "cool":
-      if(Math.random() > 0.6 && hasAtmosphere)oceans = true;
-      oceanType = "waterOcean";
-      break;
-    case "cold":
-      if(Math.random() > 0.8 && hasAtmosphere)oceans = true;
-      oceanType = "coldOcean";
-      break;
-    case "frozen":
-      oceans = false;
-      break;
-  }
   let amount1 = Rand(Math.floor(amount/2),amount);
   let stuff = [];
   
@@ -1086,22 +1173,22 @@ function crust(temp,size,hasAtmosphere) {
     stuff.push({
       object: landmass,
       amount: 1,
-      otherVars: [temp,Rand(25,40),oceans],
+      otherVars: [temp,Rand(25,40),oceans !== "",lifeType,species],
     });
   }
-  if(oceans) {
+  if(oceans !== "") {
     let amount2 = Rand(Math.floor(amount/2),amount);
-    
     for(let i = 0; i < amount2; i++) {
       stuff.push({
-        object: oceanType,
+        object: ocean,
         amount: 1,
+        otherVars: [oceans,temp,lifeType,species],
       });
     }
   }
   return new Instance("crust",stuff,temp + " crust");
 }
-function landmass(temp,amount,lakes) {
+function landmass(temp,amount,lakes,life,species) {
   let lakeType = "lavaLake";
   let stuff = [];
   switch(temp) {
@@ -1146,6 +1233,286 @@ function landmass(temp,amount,lakes) {
     });
   }
   return new Instance("landmass",stuff2,temp + " landmass");
+}
+function ocean(type,temp,life,species) {
+  let stuff = [];
+  name = "";
+  if(type === "lavaOcean") {
+    name = "lava ";
+    stuff.push({
+      object: "volcano",
+      amount: makeFunction(Rand,3,4),
+    },{
+      object: "lavaShore",
+      amount: makeFunction(Rand,3,4),
+    },{
+      object: "rockberg",
+      amount: (temp === "hot") ? makeFunction(Rand,3,4) : 0,
+    },{
+      object: "lava",
+      amount: makeFunction(Rand,200,500),
+    });
+  } else if(type === "waterOcean") {
+    name = "water ";
+    let water = "saltWater";
+    let beach = "shore";
+    let otherVars = [];
+    if(life === "proto-life") {
+      water = "protoLifeWater";
+    }
+    if(life === "prokaryotic life") {
+      water = bacterialWater;
+      beach = bacteriaShore;
+      otherVars = [assignSpecies(species,life)];
+    }
+    stuff.push({
+      object: "mountain",
+      amount: makeFunction(Rand,3,4),
+    },{
+      object: "hydrothermalVent",
+      amount: makeFunction(Rand,3,4),
+    },{
+      object: beach,
+      amount: makeFunction(Rand,3,4),
+      otherVars: otherVars,
+    },{
+      object: "iceberg",
+      amount: (temp === "cool") ? makeFunction(Rand,3,4) : 0,
+    },{
+      object: water,
+      amount: makeFunction(Rand,200,500),
+      otherVars: otherVars,
+    });
+  } else {
+    name = "methane ";
+    stuff.push({
+      object: "iceMountain",
+      amount: makeFunction(Rand,3,4),
+    },{
+      object: "cryovent",
+      amount: makeFunction(Rand,3,4),
+    },{
+      object: "coldShore",
+      amount: makeFunction(Rand,3,4),
+    },{
+      object: "methaneDrop",
+      amount: makeFunction(Rand,200,500),
+    });
+  }
+  return new Instance(name + "ocean",stuff,name + "ocean");
+}
+function bacterialWater(species) {
+  let stuff = [];
+  for(let i = 0; i < Rand(5,20); i++) {
+    if(Math.random() < 0.6) {
+      let thing = choose(species.primary);
+      stuff.push({
+        object: function() {return thing.getInstance()},
+        amount: 1,
+      });
+    } else if(Math.random() < 0.8) {
+      let thing = choose(species.secondary);
+      stuff.push({
+        object: function() {return thing.getInstance()},
+        amount: 1,
+      });
+    } else {
+      let thing = choose(species.tertiary);
+      stuff.push({
+        object: function() {return thing.getInstance()},
+        amount: 1,
+      });
+    }
+  }
+  stuff.push({
+    object: "waterMolecule",
+    amount: makeFunction(Rand,50,100),
+  },{
+    object: "saltMolecule",
+    amount: makeFunction(Rand,2,3),
+  });
+  return new Instance("salt water drop",stuff,"salt water drop");
+}
+function bacteriaShore(species) {
+  return new Instance("shore",[{
+    object: "sand",
+    amount: makeFunction(Rand,50,70),
+  },{
+    object: bacterialWater,
+    amount: makeFunction(Rand,20,30),
+    otherVars: [species],
+  },"shore"],);
+}
+function assignSpecies(species,lifeType) {
+  if(lifeType === "prokaryotic life") {
+    let primary = [species[Rand(0,species.length-1)]];
+    if(Math.random() < 0.2) {
+      primary.push(species[Rand(0,species.length-1)])
+    }
+    let secondary = [];
+    for(let i = 0; i < Rand(2,4); i++) {
+      secondary.push(species[Rand(0,species.length-1)]);
+    }
+    let tertiary = [];
+    for(let i = 0; i < Rand(10,20); i++) {
+      tertiary.push(species[Rand(0,species.length-1)]);
+    }
+    return {
+      primary: primary,
+      secondary: secondary,
+      tertiary: tertiary,
+    };
+  }
+}
+function protoLife() {
+  let choose = [[rnaNucleotide,0.75],["lipidBubble",0.75],["rnaFragment",0.5],["polypeptide",0.5],["protoCell",0.1]];
+  let thing = chooseWeighted(choose)[0];
+  if(typeof thing === "string") {
+    return getInstanceById(thing);
+  } else {
+    return thing();
+  }
+}
+function rnaNucleotide(base) {
+  if(!base) {
+    base = choose(["adenine","guanine","cytosine","uracil"]);
+  }
+  return new Instance(base + " nucleotide",[{
+    object: base,
+    amount: 1,
+  },{
+    object: "phosphate",
+    amount: 1,
+  },{
+    object: "ribose",
+    amount: 1,
+  }],"nucleotide");
+}
+function dnaNucleotide(base) {
+  if(!base) {
+    base = choose(["adenine","guanine","cytosine","thymine"]);
+  }
+  return new Instance(base + " nucleotide",[{
+    object: base,
+    amount: 1,
+  },{
+    object: "phosphate",
+    amount: 1,
+  },{
+    object: "deoxyribose",
+    amount: 1,
+  }],"nucleotide");
+}
+function aminoAcid() {
+  let amino = choose(["alanine","arginine","asparagine","asparticAcid","cysteine","glutamine","glutamicAcid","glycine","histadine","isoleucine","leucine","lysine","methionine","phenylalanine","proline","serine","threonine","tryptophan","tyrosine","valine"]);
+  return getInstanceById(amino);
+}
+
+class Lifeform {
+  constructor() {
+    this.name = randomName(6,20) + " " + randomName(6,20);
+  }
+}
+
+class Prokaryote extends Lifeform {
+  constructor() {
+    super();
+    this.type = "bacterium";
+    this.hasPlasmids = Math.random() > 0.5 ? false : true;
+    this.proteins = [];
+    for(let i = 0; i < Rand(4,8); i++) {
+      this.proteins.push(makeProtein(Rand(20,50)));
+    }
+    this.genome = makeDNA(Rand(100,200));
+    if(this.hasPlasmids) {
+      this.plasmids = []
+      for(let i = 0; i < Rand(4,8); i++) {
+        this.plasmids.push(makeDNA(Rand(10,25)));
+      }
+    }
+  }
+  getInstance() {
+    let thing = this;
+    let stuff = [{
+      object: function() {return thing.cellMembrane()},
+      amount: 1,
+    },{
+      object: function() {return thing.protein()},
+      amount: makeFunction(Rand,10,20),
+    },{
+      object: function() {return thing.dna()},
+      amount: 1,
+    }]
+    if(this.hasPlasmids) {
+      stuff.push({
+        object: function() {return thing.plasmid()},
+        amount: makeFunction(Rand,1,5),
+      });
+    }
+    return new Instance(this.name,stuff,this.type);
+  }
+  cellMembrane() {
+    let thing = this;
+    return new Instance("cell membrane",[{
+      object: "phospholipid",
+      amount: makeFunction(Rand,50,100),
+    },{
+      object: function() {return thing.protein()},
+      amount: makeFunction(Rand,2,5),
+    }],"cell membrane");
+  }
+  protein() {
+    let stuff = choose(this.proteins);
+    let stuff2 = [];
+    for(let i = 0; i < stuff.length; i++) {
+      stuff2.push({
+        object: stuff[i],
+        amount: 1,
+      });
+    }
+    return new Instance("protein",stuff2,"protein");
+  }
+  dna() {
+    let stuff = this.genome;
+    let stuff2 = [];
+    for(let i = 0; i < stuff.length; i++) {
+        
+      stuff2.push({
+        object: dnaNucleotide,
+        amount: 1,
+        otherVars: [stuff[i]],
+      });
+    }
+    return new Instance("DNA",stuff2,"DNA");
+  }
+  plasmid() {
+    let stuff = choose(this.plasmids);
+    let stuff2 = [];
+    
+    for(let i = 0; i < stuff.length; i++) {
+      stuff2.push({
+        object: dnaNucleotide,
+        amount: 1,
+        otherVars: [stuff[i]],
+      });
+    }
+    return new Instance("plasmid",stuff2,"plasmid");
+  }
+}
+
+function makeDNA(length) {
+  let dna = [];
+  for(let i = 0; i < length; i++) {
+    dna.push(choose(["adenine","guanine","cytosine","thymine"]));
+  }
+  return dna;
+}
+function makeProtein(length) {
+  let protein = [];
+  for(let i = 0; i < length; i++) {
+    protein.push(choose(["alanine","arginine","asparagine","asparticAcid","cysteine","glutamine","glutamicAcid","glycine","histadine","isoleucine","leucine","lysine","methionine","phenylalanine","proline","serine","threonine","tryptophan","tyrosine","valine"]));
+  }
+  return protein;
 }
 /*
 class Civ {
@@ -1374,6 +1741,30 @@ let blackHole = new GenericThing("blackHole","black hole",[{
 	object: "consolationBox",
 	amount: 1
 }],);
+//star features
+let starCorona = new GenericThing("starCorona","corona",[{
+	object: "proton",
+	amount: makeFunction(Rand,50,100),
+},{
+	object: "electron",
+	amount: makeFunction(Rand,50,100),
+}],);
+let neutronStarCrust = new GenericThing("neutronStarCrust","crust",[{
+	object: "nuclearPasta",
+	amount: makeFunction(Rand,50,100),
+},{
+	object: "ironChunk",
+	amount: makeFunction(Rand,50,100),
+}],);
+let neutronStarMantle = new GenericThing("neutronStarMantle","mantle",[{
+	object: "nuclearPasta",
+	amount: makeFunction(Rand,50,100),
+}],);
+let neutronStarCore = new GenericThing("neutronStarCore","core",[{
+	object: "quarkGluonPlasma",
+	amount: makeFunction(Rand,50,100),
+}],);
+
 //large features
 let waterOcean = new GenericThing("waterOcean","water ocean",[{
 	object: "saltWater",
@@ -1384,10 +1775,6 @@ let waterLake = new GenericThing("waterLake","water lake",[{
 	amount: makeFunction(Rand,50,100),
 }],);
 
-let lavaOcean = new GenericThing("lavaOcean","lava ocean",[{
-	object: "lava",
-	amount: makeFunction(Rand,200,500),
-}],);
 let lavaLake = new GenericThing("lavaLake","lava lake",[{
 	object: "lava",
 	amount: makeFunction(Rand,50,100),
@@ -1406,6 +1793,10 @@ let mountain = new GenericThing("mountain","mountain",[{
 	object: "rock",
 	amount: makeFunction(Rand,50,100),
 }],);
+let rockberg = new GenericThing("rockberg","rockberg",[{
+	object: "rock",
+	amount: makeFunction(Rand,50,100),
+}],);
 let volcano = new GenericThing("volcano","volcano",[{
 	object: "rock",
 	amount: makeFunction(Rand,50,70),
@@ -1413,12 +1804,53 @@ let volcano = new GenericThing("volcano","volcano",[{
 	object: "lava",
 	amount: makeFunction(Rand,20,30),
 }],);
+let lavaShore = new GenericThing("lavaShore","lava coast",[{
+	object: "rock",
+	amount: makeFunction(Rand,50,70),
+},{
+	object: "lava",
+	amount: makeFunction(Rand,20,30),
+}],);
+let shore = new GenericThing("shore","shore",[{
+	object: "sand",
+	amount: makeFunction(Rand,50,70),
+},{
+	object: "saltWater",
+	amount: makeFunction(Rand,20,30),
+}],);
+let iceberg = new GenericThing("iceberg","iceberg",[{
+	object: "ice",
+	amount: makeFunction(Rand,50,100),
+}],);
+let coldShore = new GenericThing("coldShore","methane coast",[{
+	object: "ice",
+	amount: makeFunction(Rand,50,70),
+},{
+	object: "methaneDrop",
+	amount: makeFunction(Rand,20,30),
+}],);
+
+
+let hydrothermalVent = new GenericThing("hydrothermalVent","hydrothermal vent",[{
+	object: "rock",
+	amount: makeFunction(Rand,20,30),
+},{
+	object: "lava",
+	amount: makeFunction(Rand,1,2),
+}],);
 let cryovolcano = new GenericThing("cryovolcano","cryovolcano",[{
 	object: "ice",
 	amount: makeFunction(Rand,50,70),
 },{
 	object: "water",
 	amount: makeFunction(Rand,20,30),
+}],);
+let cryovent = new GenericThing("cryovent","cryovent",[{
+	object: "ice",
+	amount: makeFunction(Rand,20,30),
+},{
+	object: "water",
+	amount: makeFunction(Rand,1,2),
 }],);
 let iceMountain = new GenericThing("iceMountain","ice mountain",[{
 	object: "ice",
@@ -1459,7 +1891,15 @@ let rock = new GenericThing("rock","rock",[{
 	object: "calciumOxide",
 	amount: makeFunction(Rand,20,50),
 }],);
-let water = new GenericThing("water","water",[{
+let sand = new GenericThing("sand","sand",[{
+	object: "sandGrain",
+	amount: makeFunction(Rand,20,30),
+}],);
+let sandGrain = new GenericThing("sandGrain","grain of sand",[{
+	object: "siliconDioxide",
+	amount: makeFunction(Rand,5,10),
+}],);
+let water = new GenericThing("water","water drop",[{
 	object: "waterMolecule",
 	amount: makeFunction(Rand,50,100),
 },{
@@ -1470,7 +1910,17 @@ let ice = new GenericThing("ice","ice",[{
 	object: "waterMolecule",
 	amount: makeFunction(Rand,50,100),
 }],);
-let saltWater = new GenericThing("saltWater","salt water",[{
+let saltWater = new GenericThing("saltWater","salt water drop",[{
+	object: "waterMolecule",
+	amount: makeFunction(Rand,50,100),
+},{
+	object: "saltMolecule",
+	amount: makeFunction(Rand,2,3),
+}],);
+let protoLifeWater = new GenericThing("protoLifeWater","salt water drop",[{
+	object: protoLife,
+	amount: makeFunction(Rand,5,20),
+},{
 	object: "waterMolecule",
 	amount: makeFunction(Rand,50,100),
 },{
@@ -1496,6 +1946,34 @@ let nitrogenCloud = new GenericThing("nitrogenCloud","nitrogen cloud",[{
 	object: "nitrogenMolecule",
 	amount: makeFunction(Rand,50,100),
 }],);
+let plasma = new GenericThing("plasma","plasma",[{
+	object: "proton",
+	amount: makeFunction(Rand,50,100),
+},{
+	object: "electron",
+	amount: makeFunction(Rand,50,120),
+},{
+	object: "heliumNucleus",
+	amount: makeFunction(Rand,20,30),
+}],);
+let electronDegenerateMatter = new GenericThing("electronDegenerateMatter","electron degenerate matter",[{
+	object: "carbonAtom",
+	amount: makeFunction(Rand,50,100),
+}],);
+let nuclearPasta = new GenericThing("nuclearPasta","nuclear pasta",[{
+	object: "neutron",
+	amount: makeFunction(Rand,50,100),
+},{
+	object: "proton",
+	amount: makeFunction(chance,0.5),
+},{
+	object: "electron",
+	amount: makeFunction(chance,0.5),
+}],);
+let quarkGluonPlasma = new GenericThing("quarkGluonPlasma","quark-gluon plasma",[{
+	object: "consolationBox",
+	amount: 1,
+}],);
 
 let oxygenCloud = new GenericThing("oxygenCloud","oxygen cloud",[{
 	object: "oxygenMolecule",
@@ -1509,7 +1987,7 @@ let methaneCloud = new GenericThing("methaneCloud","methane cloud",[{
 	object: "methaneMolecule",
 	amount: makeFunction(Rand,50,100),
 }],);
-let methaneDrop = new GenericThing("methaneDrop","methane droplet",[{
+let methaneDrop = new GenericThing("methaneDrop","methane drop",[{
 	object: "methaneMolecule",
 	amount: makeFunction(Rand,50,100),
 }],);
@@ -1549,6 +2027,459 @@ let diamond = new GenericThing("diamond","diamond",[{
 	object: "carbonAtom",
 	amount: makeFunction(Rand,50,100),
 }],);
+//life
+let rnaFragment = new GenericThing("rnaFragment","RNA",[{
+  object: rnaNucleotide,
+	amount: makeFunction(Rand,10,20),
+}],);
+let ribose = new GenericThing("ribose","ribose",[{
+  object: "carbonAtom",
+  amount: 5,
+},{
+  object: "hydrogenAtom",
+  amount: 10,
+},{
+  object: "oxygenAtom",
+  amount: 5,
+}],);
+let deoxyribose = new GenericThing("deoxyribose","deoxyribose",[{
+  object: "carbonAtom",
+  amount: 5,
+},{
+  object: "hydrogenAtom",
+  amount: 10,
+},{
+  object: "oxygenAtom",
+  amount: 4,
+}],);
+let lipidBubble = new GenericThing("lipidBubble","lipid bubble",[{
+  object: "lipidBilayer",
+	amount: 1,
+},{
+  object: aminoAcid,
+	amount: makeFunction(Rand,10,20),
+},{
+  object: rnaNucleotide,
+	amount: makeFunction(Rand,10,20),
+}],);
+let lipidBilayer = new GenericThing("lipidBilayer","lipid bilayer",[{
+  object: "phospholipid",
+	amount: makeFunction(Rand,50,100),
+}],);
+function fattyAcid() {
+  let carbons = Rand(13,21);
+  let hydrogens = carbons*2 - Rand(2,8);
+  return new Instance("fatty acid",[{
+    object: "carbonAtom",
+    amount: carbons,
+  },{
+    object: "hydrogenAtom",
+    amount: hydrogens,
+  },{
+    object: "oxygenAtom",
+    amount: 2,
+  }],"fatty acid");
+}
+let phospholipid = new GenericThing("phospholipid","phospholipid",[{
+  object: "glycerol",
+	amount: 1,
+},{
+  object: "phosphate",
+	amount: 1,
+},{
+  object: fattyAcid,
+	amount: 2,
+}],);
+let glycerol = new GenericThing("glycerol","glycerol",[{
+  object: "carbonAtom",
+  amount: 3,
+},{
+  object: "hydrogenAtom",
+  amount: 8,
+},{
+  object: "oxygenAtom",
+  amount: 3,
+}],);
+let protoCell = new GenericThing("protoCell","proto-cell",[{
+  object: "lipidBilayer",
+	amount: 1,
+},{
+  object: "polypeptide",
+	amount: makeFunction(Rand,10,20),
+},{
+  object: "rnaFragment",
+	amount: makeFunction(Rand,1,2),
+}],);
+let polypeptide = new GenericThing("polypeptide","polypeptide",[{
+  object: aminoAcid,
+	amount: makeFunction(Rand,20,50),
+}],);
+
+
+
+//long list of amino acids
+
+let alanine = new GenericThing("alanine","alanine",[{
+  object: "carbonAtom",
+  amount: 3,
+},{
+  object: "hydrogenAtom",
+  amount: 7,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"amino acid");
+
+let arginine = new GenericThing("arginine","arginine",[{
+  object: "carbonAtom",
+  amount: 6,
+},{
+  object: "hydrogenAtom",
+  amount: 14,
+},{
+  object: "nitrogenAtom",
+  amount: 4,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"amino acid");
+
+let asparagine = new GenericThing("asparagine","asparagine",[{
+  object: "carbonAtom",
+  amount: 4,
+},{
+  object: "hydrogenAtom",
+  amount: 8,
+},{
+  object: "nitrogenAtom",
+  amount: 2,
+},{
+  object: "oxygenAtom",
+  amount: 3,
+}],"amino acid");
+
+let asparticAcid = new GenericThing("asparticAcid","aspartic acid",[{
+  object: "carbonAtom",
+  amount: 4,
+},{
+  object: "hydrogenAtom",
+  amount: 7,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 4,
+}],"amino acid");
+
+let cysteine = new GenericThing("cysteine","cysteine",[{
+  object: "carbonAtom",
+  amount: 3,
+},{
+  object: "hydrogenAtom",
+  amount: 7,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+},{
+  object: "sulfurAtom",
+  amount: 1,
+}],"amino acid");
+
+let glutamine = new GenericThing("glutamine","glutamine",[{
+  object: "carbonAtom",
+  amount: 5,
+},{
+  object: "hydrogenAtom",
+  amount: 10,
+},{
+  object: "nitrogenAtom",
+  amount: 2,
+},{
+  object: "oxygenAtom",
+  amount: 3,
+}],"amino acid");
+
+let glutamicAcid = new GenericThing("glutamicAcid","glutamic acid",[{
+  object: "carbonAtom",
+  amount: 2,
+},{
+  object: "hydrogenAtom",
+  amount: 9,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 4,
+}],"amino acid");
+
+let glycine = new GenericThing("glycine","glycine",[{
+  object: "carbonAtom",
+  amount: 2,
+},{
+  object: "hydrogenAtom",
+  amount: 5,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"amino acid");
+
+let histadine = new GenericThing("histadine","histadine",[{
+  object: "carbonAtom",
+  amount: 6,
+},{
+  object: "hydrogenAtom",
+  amount: 9,
+},{
+  object: "nitrogenAtom",
+  amount: 3,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"amino acid");
+
+let isoleucine = new GenericThing("isoleucine","isoleucine",[{
+  object: "carbonAtom",
+  amount: 6,
+},{
+  object: "hydrogenAtom",
+  amount: 13,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"amino acid");
+
+let leucine = new GenericThing("leucine","leucine",[{
+  object: "carbonAtom",
+  amount: 6,
+},{
+  object: "hydrogenAtom",
+  amount: 13,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"amino acid");
+
+let lysine = new GenericThing("lysine","lysine",[{
+  object: "carbonAtom",
+  amount: 6,
+},{
+  object: "hydrogenAtom",
+  amount: 14,
+},{
+  object: "nitrogenAtom",
+  amount: 2,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"amino acid");
+
+let methionine = new GenericThing("methionine","methionine",[{
+  object: "carbonAtom",
+  amount: 5,
+},{
+  object: "hydrogenAtom",
+  amount: 11,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+},{
+  object: "sulfurAtom",
+  amount: 1,
+}],"amino acid");
+
+let phenylalanine = new GenericThing("phenylalanine","phenylalanine",[{
+  object: "carbonAtom",
+  amount: 9,
+},{
+  object: "hydrogenAtom",
+  amount: 11,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"amino acid");
+
+let proline = new GenericThing("proline","proline",[{
+  object: "carbonAtom",
+  amount: 5,
+},{
+  object: "hydrogenAtom",
+  amount: 9,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"amino acid");
+
+let serine = new GenericThing("serine","serine",[{
+  object: "carbonAtom",
+  amount: 3,
+},{
+  object: "hydrogenAtom",
+  amount: 7,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 3,
+}],"amino acid");
+
+let threonine = new GenericThing("threonine","threonine",[{
+  object: "carbonAtom",
+  amount: 4,
+},{
+  object: "hydrogenAtom",
+  amount: 9,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 3,
+}],"amino acid");
+
+let tryptophan = new GenericThing("tryptophan","tryptophan",[{
+  object: "carbonAtom",
+  amount: 11,
+},{
+  object: "hydrogenAtom",
+  amount: 12,
+},{
+  object: "nitrogenAtom",
+  amount: 2,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"amino acid");
+
+let tyrosine = new GenericThing("tyrosine","tyrosine",[{
+  object: "carbonAtom",
+  amount: 9,
+},{
+  object: "hydrogenAtom",
+  amount: 11,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 3,
+}],"amino acid");
+
+let valine = new GenericThing("valine","valine",[{
+  object: "carbonAtom",
+  amount: 5,
+},{
+  object: "hydrogenAtom",
+  amount: 11,
+},{
+  object: "nitrogenAtom",
+  amount: 1,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"amino acid");
+
+
+
+
+//nucleobases
+
+let adenine = new GenericThing("adenine","adenine",[{
+  object: "carbonAtom",
+  amount: 5,
+},{
+  object: "hydrogenAtom",
+  amount: 5,
+},{
+  object: "nitrogenAtom",
+  amount: 5,
+}],"nucleobase");
+
+let cytosine = new GenericThing("cytosine","cytosine",[{
+  object: "carbonAtom",
+  amount: 4,
+},{
+  object: "hydrogenAtom",
+  amount: 5,
+},{
+  object: "nitrogenAtom",
+  amount: 3,
+},{
+  object: "oxygenAtom",
+  amount: 1,
+}],"nucleobase");
+
+let guanine = new GenericThing("guanine","guanine",[{
+  object: "carbonAtom",
+  amount: 5,
+},{
+  object: "hydrogenAtom",
+  amount: 5,
+},{
+  object: "nitrogenAtom",
+  amount: 5,
+},{
+  object: "oxygenAtom",
+  amount: 1,
+}],"nucleobase");
+
+let thymine = new GenericThing("thymine","thymine",[{
+  object: "carbonAtom",
+  amount: 5,
+},{
+  object: "hydrogenAtom",
+  amount: 6,
+},{
+  object: "nitrogenAtom",
+  amount: 2,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"nucleobase");
+
+let uracil = new GenericThing("uracil","uracil",[{
+  object: "carbonAtom",
+  amount: 4,
+},{
+  object: "hydrogenAtom",
+  amount: 4,
+},{
+  object: "nitrogenAtom",
+  amount: 2,
+},{
+  object: "oxygenAtom",
+  amount: 2,
+}],"nucleobase");
+
+
+
+
 
 //molecules
 let siliconDioxide = new GenericThing("siliconDioxide","silicon dioxide",[{object: "siliconAtom",amount: 1,},{object: "oxygenAtom",amount: 2,}],);
@@ -1565,33 +2496,40 @@ let methaneMolecule = new GenericThing("methaneMolecule","methane",[{object: "hy
 let carbonDioxide = new GenericThing("carbonDioxide","carbon dioxide",[{object: "carbonAtom",amount: 1,},{object: "oxygenAtom",amount: 2,}],);
 let ammonia = new GenericThing("ammonia","ammonia",[{object: "nitrogen",amount: 1,},{object: "hydrogenAtom",amount: 3,}],);
 let hydrogenMolecule = new GenericThing("hydrogenMolecule","hydrogen molecule",[{object: "hydrogen",amount: 2,}],);
+let phosphate = new GenericThing("phosphate","phosphate",[{object: "phosphorusAtom",amount: 1,},{object: "oxygenAtom",amount: 4,}],);
 
 //atoms
-let calciumAtom = new GenericThing("calciumAtom","calcium atom",[{object: "consolationBox",amount: 1,}],);
-let magnesiumAtom = new GenericThing("magnesiumAtom","magnesium atom",[{object: "consolationBox",amount: 1,}],);
-let ironAtom = new GenericThing("ironAtom","iron atom",[{object: "consolationBox",amount: 1,}],);
-let nickelAtom = new GenericThing("nickelAtom","nickel atom",[{object: "consolationBox",amount: 1,}],);
-let aluminumAtom = new GenericThing("aluminumAtom","aluminum atom",[{object: "consolationBox",amount: 1,}],);
-let siliconAtom = new GenericThing("siliconAtom","silicon atom",[{object: "consolationBox",amount: 1,}],);
-let hydrogenAtom = new GenericThing("hydrogenAtom","hydrogen atom",[{object: "consolationBox",amount: 1,}],);
-let oxygenAtom = new GenericThing("oxygenAtom","oxygen atom",[{object: "consolationBox",amount: 1,}],);
-let nitrogenAtom = new GenericThing("nitrogenAtom","nitrogen atom",[{object: "consolationBox",amount: 1,}],);
-let carbonAtom = new GenericThing("carbonAtom","carbon atom",[{object: "consolationBox",amount: 1,}],);
-let argonAtom = new GenericThing("argonAtom","argon atom",[{object: "consolationBox",amount: 1,}],);
-let heliumAtom = new GenericThing("heliumAtom","helium atom",[{object: "consolationBox",amount: 1,}],);
-let chlorineAtom = new GenericThing("chlorineAtom","chlorine atom",[{object: "consolationBox",amount: 1,}],);
-let sodiumAtom = new GenericThing("chlorineAtom","sodium atom",[{object: "consolationBox",amount: 1,}],);
+let calciumAtom = new GenericThing("calciumAtom","calcium atom",[{object: "proton",amount: 20,},{object: "neutron",amount: 20,},{object: "electron",amount: 20,}],);
+let magnesiumAtom = new GenericThing("magnesiumAtom","magnesium atom",[{object: "proton",amount: 12,},{object: "neutron",amount: 12,},{object: "electron",amount: 12,}],);
+let ironAtom = new GenericThing("ironAtom","iron atom",[{object: "proton",amount: 26,},{object: "neutron",amount: 30,},{object: "electron",amount: 26,}],);
+let nickelAtom = new GenericThing("nickelAtom","nickel atom",[{object: "proton",amount: 28,},{object: "neutron",amount: 30,},{object: "electron",amount: 28,}],);
+let aluminumAtom = new GenericThing("aluminumAtom","aluminum atom",[{object: "proton",amount: 13,},{object: "neutron",amount: 14,},{object: "electron",amount: 13,}],);
+let siliconAtom = new GenericThing("siliconAtom","silicon atom",[{object: "proton",amount: 14,},{object: "neutron",amount: 14,},{object: "electron",amount: 14,}],);
+let hydrogenAtom = new GenericThing("hydrogenAtom","hydrogen atom",[{object: "proton",amount: 1,},{object: "neutron",amount: makeFunction(chance,0.9),},{object: "electron",amount: 1,}],);
+let oxygenAtom = new GenericThing("oxygenAtom","oxygen atom",[{object: "proton",amount: 8,},{object: "neutron",amount: 8,},{object: "electron",amount: 8,}],);
+let nitrogenAtom = new GenericThing("nitrogenAtom","nitrogen atom",[{object: "proton",amount: 7,},{object: "neutron",amount: 7,},{object: "electron",amount: 7,}],);
+let carbonAtom = new GenericThing("carbonAtom","carbon atom",[{object: "proton",amount: 6,},{object: "neutron",amount: 6,},{object: "electron",amount: 6,}],);
+let argonAtom = new GenericThing("argonAtom","argon atom",[{object: "proton",amount: 18,},{object: "neutron",amount: 22,},{object: "electron",amount: 18,}],);
+let heliumAtom = new GenericThing("heliumAtom","helium atom",[{object: "proton",amount: 2,},{object: "neutron",amount: 2,},{object: "electron",amount: 2,}],);
+let chlorineAtom = new GenericThing("chlorineAtom","chlorine atom",[{object: "proton",amount: 17,},{object: "neutron",amount: 18,},{object: "electron",amount: 17,}],);
+let sodiumAtom = new GenericThing("sodiumAtom","sodium atom",[{object: "proton",amount: 11,},{object: "neutron",amount: 12,},{object: "electron",amount: 11,}],);
+let sulfurAtom = new GenericThing("sulfurAtom","sulfur atom",[{object: "proton",amount: 16,},{object: "neutron",amount: 16,},{object: "electron",amount: 16,}],);
+let phosphorusAtom = new GenericThing("phosphorusAtom","phosphorus atom",[{object: "proton",amount: 15,},{object: "neutron",amount: 16,},{object: "electron",amount: 15,}],);
 
+let heliumNucleus = new GenericThing("heliumNucleus","helium nucleus",[{object: "proton",amount: 2,},{object: "neutron",amount: 2,}],);
 
+let electron = new GenericThing("electron","electron",[{object: "consolationBox",amount:1,}]);
+let proton = new GenericThing("proton","proton",[{object: "consolationBox",amount:1,}]);
+let neutron = new GenericThing("neutron","neutron",[{object: "consolationBox",amount:1,}]);
 
 let schemafieldContents = [patacosmology, metacosmology, "altarca", "verse", "verse", binaryfield, maiorverse, selfverse];
 
 
 
-function launchNest(what) {
+function launchNest(what,vars) {
 	let Seed;
 	if(what instanceof Function) {
-		Seed=what();
+		Seed=what(...vars);
 	} else {
 		Seed = what.getInstance();
 	}

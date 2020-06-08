@@ -863,7 +863,7 @@ function oceansAndLife(temp,hasAtmosphere) {
       oceanType = "lavaOcean";
       break;
     case "warm":
-      if(Math.random() > 0.7 && hasAtmosphere)oceans = true;
+      if(Math.random() > 0.5 && hasAtmosphere)oceans = true;
       oceanType = "waterOcean";
       break;
     case "temperate":
@@ -885,7 +885,7 @@ function oceansAndLife(temp,hasAtmosphere) {
   let life = false;
   let lifeType = "none";
   let species = [];
-  if(Math.random() < 0.5 && oceanType === "waterOcean" && oceans) {
+  if(Math.random() < 0.8 && oceanType === "waterOcean" && oceans) {
     life = true;
     lifeType = "proto-life";
     if(Math.random() < 0.8) {
@@ -897,10 +897,15 @@ function oceansAndLife(temp,hasAtmosphere) {
   return [oceanType,lifeType,species];
 }
 function generateLife(type) {
-  let result = [];
+  let result = {};
   if(type === "prokaryotic life") {
+    result.bacteriophages = [];
+    for(let i = 0; i < 1000; i++) {
+      result.bacteriophages.push(new Virus());
+    }
+    result.prokaryotes = [];
     for(let i = 0; i < 200; i++) {
-      result.push(new Prokaryote());
+      result.prokaryotes.push(new Prokaryote(result));
     }
   }
   return result;
@@ -1263,7 +1268,7 @@ function ocean(type,temp,life,species) {
     if(life === "prokaryotic life") {
       water = bacterialWater;
       beach = bacteriaShore;
-      otherVars = [assignSpecies(species,life)];
+      otherVars = [new Ecosystem(species,life)];
     }
     stuff.push({
       object: "mountain",
@@ -1303,26 +1308,13 @@ function ocean(type,temp,life,species) {
 }
 function bacterialWater(species) {
   let stuff = [];
-  for(let i = 0; i < Rand(5,20); i++) {
-    if(Math.random() < 0.6) {
-      let thing = choose(species.primary);
-      stuff.push({
-        object: function() {return thing.getInstance()},
-        amount: 1,
-      });
-    } else if(Math.random() < 0.8) {
-      let thing = choose(species.secondary);
-      stuff.push({
-        object: function() {return thing.getInstance()},
-        amount: 1,
-      });
-    } else {
-      let thing = choose(species.tertiary);
-      stuff.push({
-        object: function() {return thing.getInstance()},
-        amount: 1,
-      });
-    }
+  for(let i = 0; i < Rand(20,100); i++) {
+    let thing = species.choose();
+    
+    stuff.push({
+      object: function() {return thing.getInstance()},
+      amount: 1,
+    });
   }
   stuff.push({
     object: "waterMolecule",
@@ -1343,25 +1335,66 @@ function bacteriaShore(species) {
     otherVars: [species],
   },"shore"],);
 }
-function assignSpecies(species,lifeType) {
-  if(lifeType === "prokaryotic life") {
-    let primary = [species[Rand(0,species.length-1)]];
-    if(Math.random() < 0.2) {
-      primary.push(species[Rand(0,species.length-1)])
+class Ecosystem{
+  constructor(species,lifeType) {
+    this.lifeType = lifeType;
+    if(lifeType === "prokaryotic life") {
+      let primary = [choose(species.prokaryotes)];
+      if(Math.random() < 0.3) {
+        primary.push(choose(species.prokaryotes))
+      }
+      let secondary = [];
+      for(let i = 0; i < Rand(2,4); i++) {
+        secondary.push(choose(species.prokaryotes));
+      }
+      let tertiary = [];
+      for(let i = 0; i < Rand(10,20); i++) {
+        tertiary.push(choose(species.prokaryotes));
+      }
+      this.bacteria = {
+        primary: primary,
+        secondary: secondary,
+        tertiary: tertiary,
+      };
+      this.bacteriophages = {
+        primary: [],
+        secondary: [],
+        tertiary: [],
+      };
+      
+      for(let i = 0; i < this.bacteria.primary.length; i++) {
+        this.bacteriophages.primary = this.bacteriophages.primary.concat(this.bacteria.primary[i].viruses);
+      }
+      
+      for(let i = 0; i < this.bacteria.secondary.length; i++) {
+        this.bacteriophages.secondary = this.bacteriophages.secondary.concat(this.bacteria.secondary[i].viruses);
+      }
+      
+      for(let i = 0; i < this.bacteria.tertiary.length; i++) {
+        this.bacteriophages.tertiary = this.bacteriophages.tertiary.concat(this.bacteria.tertiary[i].viruses);
+      }
     }
-    let secondary = [];
-    for(let i = 0; i < Rand(2,4); i++) {
-      secondary.push(species[Rand(0,species.length-1)]);
+  }
+  choose() {
+    if(this.lifeType === "prokaryotic life") {
+      if(Math.random() < 0.4) {
+        if(Math.random() < 0.6) {
+          return choose(this.bacteria.primary);
+        } else if(Math.random() < 0.8) {
+          return choose(this.bacteria.secondary);
+        } else {
+          return choose(this.bacteria.tertiary);
+        }
+      } else {
+        if(Math.random() < 0.6) {
+          return choose(this.bacteriophages.primary);
+        } else if(Math.random() < 0.8) {
+          return choose(this.bacteriophages.secondary);
+        } else {
+          return choose(this.bacteriophages.tertiary);
+        }
+      }
     }
-    let tertiary = [];
-    for(let i = 0; i < Rand(10,20); i++) {
-      tertiary.push(species[Rand(0,species.length-1)]);
-    }
-    return {
-      primary: primary,
-      secondary: secondary,
-      tertiary: tertiary,
-    };
   }
 }
 function protoLife() {
@@ -1415,13 +1448,22 @@ class Lifeform {
 }
 
 class Prokaryote extends Lifeform {
-  constructor() {
+  constructor(stuff) {
     super();
+    let viruses = stuff.bacteriophages;
+    this.viruses = [];
+    for(let i = 0; i < Rand(3,10); i++) {
+      this.viruses.push(choose(viruses));
+    }
     this.type = "bacterium";
     this.hasPlasmids = Math.random() > 0.5 ? false : true;
     this.proteins = [];
     for(let i = 0; i < Rand(4,8); i++) {
       this.proteins.push(makeProtein(Rand(20,50)));
+    }
+    this.membraneProteins = [];
+    for(let i = 0; i < Rand(4,8); i++) {
+      this.membraneProteins.push(makeProtein(Rand(20,50)));
     }
     this.genome = makeDNA(Rand(100,200));
     if(this.hasPlasmids) {
@@ -1437,7 +1479,7 @@ class Prokaryote extends Lifeform {
       object: function() {return thing.cellMembrane()},
       amount: 1,
     },{
-      object: function() {return thing.protein()},
+      object: function() {return thing.protein("proteins")},
       amount: makeFunction(Rand,10,20),
     },{
       object: function() {return thing.dna()},
@@ -1449,7 +1491,14 @@ class Prokaryote extends Lifeform {
         amount: makeFunction(Rand,1,5),
       });
     }
-    return new Instance(this.name,stuff,this.type);
+    if(Math.random() < 0.2) {
+      let thingy = choose(thing.viruses);
+      stuff.push({
+        object: function() {return rename(thingy.geneticCode(),"viral genome (" + thingy.name + ")")},
+        amount: 1,
+      });
+    }
+    return new Instance(this.name + " (" + this.type + ")",stuff,this.type);
   }
   cellMembrane() {
     let thing = this;
@@ -1457,12 +1506,12 @@ class Prokaryote extends Lifeform {
       object: "phospholipid",
       amount: makeFunction(Rand,50,100),
     },{
-      object: function() {return thing.protein()},
+      object: function() {return thing.protein("membraneProteins")},
       amount: makeFunction(Rand,2,5),
     }],"cell membrane");
   }
-  protein() {
-    let stuff = choose(this.proteins);
+  protein(type) {
+    let stuff = choose(this[type]);
     let stuff2 = [];
     for(let i = 0; i < stuff.length; i++) {
       stuff2.push({
@@ -1500,12 +1549,123 @@ class Prokaryote extends Lifeform {
   }
 }
 
+
+class Virus extends Lifeform {
+  constructor() {
+    super();
+    this.type = "virus";
+    this.rna = Math.random() > 0.5 ? true : false;
+    this.proteins = [];
+    for(let i = 0; i < Rand(4,8); i++) {
+      this.proteins.push(makeProtein(Rand(20,50)));
+    }
+    this.capsidProteins = [];
+    for(let i = 0; i < Rand(4,8); i++) {
+      this.capsidProteins.push(makeProtein(Rand(20,50)));
+    }
+    if(this.rna) {
+      this.genome = makeRNA(Rand(25,50));
+    } else {
+      this.genome = makeDNA(Rand(25,50));
+    }
+  }
+  getInstance() {
+    let thing = this;
+    let stuff = [{
+      object: function() {return thing.capsid()},
+      amount: 1,
+    },{
+      object: function() {return thing.protein()},
+      amount: makeFunction(Rand,10,20),
+    },{
+      object: function() {return thing.geneticCode()},
+      amount: 1,
+    }]
+    return new Instance(this.name + " (" + this.type + ")",stuff,this.type);
+  }
+  capsid() {
+    let thing = this;
+    return new Instance("capsid",[{
+      object: function() {return thing.capsidProtein()},
+      amount: makeFunction(Rand,20,50),
+    }],"capsid");
+  }
+  capsidProtein() {
+    let stuff = choose(this.capsidProteins);
+    let stuff2 = [];
+    for(let i = 0; i < stuff.length; i++) {
+      stuff2.push({
+        object: stuff[i],
+        amount: 1,
+      });
+    }
+    return new Instance("protein",stuff2,"protein");
+  }
+  protein() {
+    let stuff = choose(this.proteins);
+    let stuff2 = [];
+    for(let i = 0; i < stuff.length; i++) {
+      stuff2.push({
+        object: stuff[i],
+        amount: 1,
+      });
+    }
+    return new Instance("protein",stuff2,"protein");
+  }
+  geneticCode() {
+    let stuff = this.genome;
+    if(this.RNA) {
+      let stuff2 = [];
+      for(let i = 0; i < stuff.length; i++) {
+          
+        stuff2.push({
+          object: rnaNucleotide,
+          amount: 1,
+          otherVars: [stuff[i]],
+        });
+      }
+      return new Instance("RNA",stuff2,"RNA");
+    } else {
+      let stuff2 = [];
+      for(let i = 0; i < stuff.length; i++) {
+          
+        stuff2.push({
+          object: dnaNucleotide,
+          amount: 1,
+          otherVars: [stuff[i]],
+        });
+      }
+      return new Instance("DNA",stuff2,"DNA");
+    }
+  }
+  plasmid() {
+    let stuff = choose(this.plasmids);
+    let stuff2 = [];
+    
+    for(let i = 0; i < stuff.length; i++) {
+      stuff2.push({
+        object: dnaNucleotide,
+        amount: 1,
+        otherVars: [stuff[i]],
+      });
+    }
+    return new Instance("plasmid",stuff2,"plasmid");
+  }
+}
+
 function makeDNA(length) {
   let dna = [];
   for(let i = 0; i < length; i++) {
     dna.push(choose(["adenine","guanine","cytosine","thymine"]));
   }
   return dna;
+}
+function makeRNA(length) {
+  let rna = [];
+  for(let i = 0; i < length; i++) {
+    rna.push(choose(["adenine","guanine","cytosine","uracil"]));
+  }
+  return rna;
 }
 function makeProtein(length) {
   let protein = [];

@@ -11,13 +11,13 @@ function chooseWeighted(array) {
   }
 }
 function coin(chance) {
-	return Math.random() > chance;
+	return Math.random() < chance;
 }
 function Rand(min,max) {
 	return parseFloat(Math.floor(Math.random()*(max-min+1)))+parseFloat(min);
 }
 function chance(prob) {
-	return Math.random() > prob ? 1 : 0;
+	return Math.random() < prob ? 1 : 0;
 }
 function rename(object, name) {
   object.name = name;
@@ -898,9 +898,14 @@ function oceansAndLife(temp,hasAtmosphere) {
       lifeType = "eukaryotic life";
       species = generateLife(lifeType);
     }
-    if(Math.random() < 0.4) {
+    if(Math.random() < 0.6) {
       life = true;
       lifeType = "multicellular life";
+      species = generateLife(lifeType);
+    }
+    if(Math.random() < 0.4) {
+      life = true;
+      lifeType = "terrestrial life";
       species = generateLife(lifeType);
     }
   }
@@ -908,7 +913,7 @@ function oceansAndLife(temp,hasAtmosphere) {
 }
 function generateLife(type) {
   let result = {};
-  if(type === "prokaryotic life" || type === "eukaryotic life" || type === "multicellular life") {
+  if(type === "prokaryotic life" || type === "eukaryotic life" || type === "multicellular life" || type === "terrestrial life") {
     result.bacteriophages = [];
     for(let i = 0; i < 1000; i++) {
       result.bacteriophages.push(new Virus());
@@ -918,7 +923,7 @@ function generateLife(type) {
       result.prokaryotes.push(new Prokaryote(result));
     }
   }
-  if(type === "eukaryotic life" || type === "multicellular life") {
+  if(type === "eukaryotic life" || type === "multicellular life" || type === "terrestrial life") {
     result.protistViruses = [];
     for(let i = 0; i < 1000; i++) {
       result.protistViruses.push(new Virus());
@@ -928,7 +933,7 @@ function generateLife(type) {
       result.protists.push(new Eukaryote(result));
     }
   }
-  if(type === "multicellular life") {
+  if(type === "multicellular life" || type === "terrestrial life") {
     result.viruses = [];
     for(let i = 0; i < 1000; i++) {
       result.viruses.push(new Virus());
@@ -1264,8 +1269,44 @@ function landmass(temp,amount,lakes,life,species) {
     stuff.push([lakeType,0.2]);
   }
   let stuff2 = [];
+  if(life === "terrestrial life") {
+    water = protistWater;
+    beach = protistShore;
+    otherVars = [new Ecosystem(species,life)];
+    ecosystem = new BigEcosystem(species,life);
+    for(let i = 0; i < Rand(20,100); i++) {
+      let thing = ecosystem.choose();
+      
+      stuff2.push({
+        object: function() {return thing.getInstance()},
+        amount: 1,
+      });
+    }
+  }
   for(let i = 0; i < amount; i++) {
     let thing = chooseWeighted(stuff);
+    if(thing[0] === "waterLake" && life === "terrestrial life") {       
+      otherVars = [new Ecosystem(species,life),new BigEcosystem(species,life)];
+      stuff2.push({
+        object: lifeLake,
+        amount: 1,
+        otherVars: otherVars,
+      });
+    } else if(thing[0] === "rock" && life === "terrestrial life") {     
+      otherVars = [new Ecosystem(species,life)]; 
+      stuff2.push({
+        object: protistRock,
+        amount: 1,
+        otherVars: otherVars,
+      });
+    } else if(thing[0] === "mountain" && life === "terrestrial life") { 
+      otherVars = [new Ecosystem(species,life),new BigEcosystem(species,life)];
+      stuff2.push({
+        object: lifeMountain,
+        amount: 1,
+        otherVars: otherVars,
+      });
+    }
     stuff2.push({
       object: thing[0],
       amount: 1,
@@ -1273,6 +1314,8 @@ function landmass(temp,amount,lakes,life,species) {
   }
   return new Instance("landmass",stuff2,temp + " landmass");
 }
+
+
 function ocean(type,temp,life,species) {
   let stuff = [];
   name = "";
@@ -1307,7 +1350,7 @@ function ocean(type,temp,life,species) {
       water = protistWater;
       beach = protistShore;
       otherVars = [new Ecosystem(species,life)];
-    } else if(life === "multicellular life") {
+    } else if(life === "multicellular life" || life === "terrestrial life") {
       water = protistWater;
       beach = protistShore;
       otherVars = [new Ecosystem(species,life)];
@@ -1357,6 +1400,8 @@ function ocean(type,temp,life,species) {
   }
   return new Instance(name + "ocean",stuff,name + "ocean");
 }
+
+
 function bacterialWater(species) {
   let stuff = [];
   for(let i = 0; i < Rand(20,100); i++) {
@@ -1376,8 +1421,9 @@ function bacterialWater(species) {
   });
   return new Instance("salt water drop",stuff,"salt water drop");
 }
+
+
 function protistWater(species) {
-  console.log(species);
   let stuff = [];
   for(let i = 0; i < Rand(50,200); i++) {
     let thing = species.choose();
@@ -1396,16 +1442,37 @@ function protistWater(species) {
   });
   return new Instance("salt water drop",stuff,"salt water drop");
 }
-function bacteriaShore(species) {
-  return new Instance("shore",[{
-    object: "sand",
-    amount: makeFunction(Rand,50,70),
+
+function protistRock(species) {
+  let stuff = [];
+  for(let i = 0; i < Rand(50,200); i++) {
+    let thing = species.choose();
+    
+    stuff.push({
+      object: function() {return thing.getInstance()},
+      amount: 1,
+    });
+  }
+  stuff.push({
+    object: "siliconDioxide",
+    amount: makeFunction(Rand,50,100),
   },{
-    object: bacterialWater,
-    amount: makeFunction(Rand,20,30),
-    otherVars: [species],
-  },"shore"],);
+    object: "ironOxide",
+    amount: makeFunction(Rand,20,50),
+  },{
+    object: "magnesiumOxide",
+    amount: makeFunction(Rand,10,25),
+  },{
+    object: "aluminumOxide",
+    amount: makeFunction(Rand,40,60),
+  },{
+    object: "calciumOxide",
+    amount: makeFunction(Rand,20,50),
+  });
+  return new Instance("rock",stuff,"rock");
 }
+
+
 function protistShore(species) {
   return new Instance("shore",[{
     object: "sand",
@@ -1416,10 +1483,49 @@ function protistShore(species) {
     otherVars: [species],
   },"shore"],);
 }
+
+
+function lifeLake(smallEcosystem,bigEcosystem) {
+  let stuff = [];
+  for(let i = 0; i < Rand(10,20); i++) {
+    let thing = bigEcosystem.choose();
+    
+    stuff.push({
+      object: function() {return thing.getInstance()},
+      amount: 1,
+    });
+  }
+  stuff.push({
+    object: protistWater,
+    amount: makeFunction(Rand,50,100),
+    otherVars: [smallEcosystem],
+  });
+  return new Instance("water lake",stuff,"water lake");
+}
+
+function lifeMountain(smallEcosystem,bigEcosystem) {
+  let stuff = [];
+  for(let i = 0; i < Rand(10,20); i++) {
+    let thing = bigEcosystem.choose();
+    
+    stuff.push({
+      object: function() {return thing.getInstance()},
+      amount: 1,
+    });
+  }
+  stuff.push({
+    object: protistRock,
+    amount: makeFunction(Rand,50,100),
+    otherVars: [smallEcosystem],
+  });
+  return new Instance("mountain",stuff,"mountain");
+}
+
+
 class Ecosystem {
   constructor(species,lifeType) {
     this.lifeType = lifeType;
-    if(lifeType === "prokaryotic life" || lifeType === "eukaryotic life" || lifeType === "multicellular life") {
+    if(lifeType === "prokaryotic life" || lifeType === "eukaryotic life" || lifeType === "multicellular life" || lifeType === "terrestrial life") {
       let primary = [choose(species.prokaryotes)];
       if(Math.random() < 0.3) {
         primary.push(choose(species.prokaryotes))
@@ -1455,7 +1561,7 @@ class Ecosystem {
         this.bacteriophages.tertiary = this.bacteriophages.tertiary.concat(this.bacteria.tertiary[i].viruses);
       }
     }
-    if(lifeType === "eukaryotic life" || lifeType === "multicellular life") {
+    if(lifeType === "eukaryotic life" || lifeType === "multicellular life" || lifeType === "terrestrial life") {
       let primary = [choose(species.protists)];
       if(Math.random() < 0.3) {
         primary.push(choose(species.protists))
@@ -1511,7 +1617,7 @@ class Ecosystem {
           return choose(this.bacteriophages.tertiary);
         }
       }
-    } else if(this.lifeType === "eukaryotic life" || this.lifeType === "multicellular life") {
+    } else if(this.lifeType === "eukaryotic life" || this.lifeType === "multicellular life" || this.lifeType === "terrestrial life") {
       if(Math.random() < 0.4) {
         if(Math.random() < 0.4) {
           if(Math.random() < 0.6) {
@@ -1721,6 +1827,10 @@ class Prokaryote extends Lifeform {
     }
     let thing = this;
     let stuff = [{
+      object: thought,
+      otherVars: [bacteriaThought],
+      amount: makeFunction(chance,0.1),
+    },{
       object: function() {return thing.cellMembrane()},
       amount: 1,
     },{
@@ -1850,6 +1960,10 @@ class Virus extends Lifeform {
     }
     let thing = this;
     let stuff = [{
+      object: thought,
+      otherVars: [virusThought],
+      amount: makeFunction(chance,0.1),
+    },{
       object: function() {return thing.capsid()},
       amount: 1,
     },{
@@ -1954,6 +2068,10 @@ class Eukaryote extends Lifeform {
     }
     let thing = this;
     let stuff = [{
+      object: thought,
+      otherVars: [protistThought],
+      amount: makeFunction(chance,0.1),
+    },{
       object: function() {return thing.cellMembrane()},
       amount: 1,
     },{
@@ -2264,6 +2382,10 @@ class TissueCell extends Eukaryote {
     }
     let thing = this;
     let stuff = [{
+      object: thought,
+      otherVars: [tissueCellThought],
+      amount: makeFunction(chance,0.1),
+    },{
       object: function() {return thing.cellMembrane()},
       amount: 1,
     },{
@@ -2315,7 +2437,7 @@ class Animal extends Lifeform {
     
     this.heart = new Organ(this.stuff,this.genome);
     
-    if(Math.random > 0.5) {
+    if(Math.random() > 0.5) {
       this.brain = new Organ(this.stuff,this.genome);
     } else {
       this.ganglia = [];
@@ -2333,7 +2455,11 @@ class Animal extends Lifeform {
     if(!this.generated) {
       this.generate();
     }
-    let stuff = [];
+    let stuff = [{
+      object: thought,
+      otherVars: [animalThought],
+      amount: makeFunction(chance,1),
+    }];
     let thing = this;
     if(this.brain) {
       stuff.push({
@@ -2347,27 +2473,27 @@ class Animal extends Lifeform {
           amount: 1,
         });
       }
+    }
+    stuff.push({
+      object: function() {return rename(thing.skin.getInstance(),"skin")},
+      amount: 1,
+    },{
+      object: function() {return rename(thing.stomach.getInstance(),"stomach")},
+      amount: 1,
+    },{
+      object: function() {return rename(thing.intestines.getInstance(),"intestines")},
+      amount: 1,
+    },{
+      object: function() {return rename(thing.heart.getInstance(),"heart")},
+      amount: 1,
+    });
+    for(let i = 0; i < this.limbCount*2; i++) {
       stuff.push({
-        object: function() {return rename(thing.skin.getInstance(),"skin")},
-        amount: 1,
-      },{
-        object: function() {return rename(thing.stomach.getInstance(),"stomach")},
-        amount: 1,
-      },{
-        object: function() {return rename(thing.intestines.getInstance(),"intestines")},
-        amount: 1,
-      },{
-        object: function() {return rename(thing.heart.getInstance(),"heart")},
+        object: function() {return rename(thing.limb.getInstance(),"limb")},
         amount: 1,
       });
-      for(let i = 0; i < this.limbCount*2; i++) {
-        stuff.push({
-          object: function() {return rename(thing.limb.getInstance(),"limb")},
-          amount: 1,
-        });
-      }
-      return new Instance(this.name + " (" + this.type + ")",stuff,this.type);
     }
+    return new Instance(this.name + " (" + this.type + ")",stuff,this.type);
   }
 }
 class Plant extends Lifeform {
@@ -2390,7 +2516,11 @@ class Plant extends Lifeform {
     if(!this.generated) {
       this.generate();
     }
-    let stuff = [];
+    let stuff = [{
+      object: thought,
+      otherVars: [plantThought],
+      amount: makeFunction(chance,0.1),
+    }];
     let thing = this;
     for(let i = 0; i < Rand(2,5); i++) {
       stuff.push({
@@ -2438,6 +2568,153 @@ class Plant extends Lifeform {
     return new Instance("branch",stuff,"branch");
   }
 }
+
+//thoughts
+
+function thought(thoughtFunction) {
+  return new Instance("thoughts",[{
+    object: thoughtFunction,
+    amount: 1,
+  }],"thoughts");
+}
+function protistThought() {
+  let thought = "";
+  let thoughtType = choose(["happy","sad","political","meta"]);
+  if(thoughtType === "happy") {
+    thought = choose([choose(["phagocytosis","photosynthesis","protein folding","protein origami","protein soccer"]) + " is fun",
+    "simple life of " + choose(["photosynthesis","reproducing","moving around like you actually can't think","protein folding","protein origami"]),
+    "it's time for " + choose(["mitosis","prophase","metaphase","anaphase","telophase"]) + " again",
+    "i love the taste of " + aminoAcid().name,
+    "yay microbiology","i hope i evolve soon","100 percent organic",
+    "cool, i made a" + choose([" protein bird"," truncated icosahedron"," glycolysis catalyzer"," mitochondrion"," chloroplast"," shrine to Cytotian"," salt crystal"])]);
+  } else if(thoughtType === "sad") {
+    thought = choose(["oh no it's some " + choose(["mercury","cyanide","uranium","free radicals","things that will eat me","badly folded protein oragami"]),
+    "a".repeat(Rand(5,10)) + "h run",
+    "i hate " + aminoAcid().name,
+    "help i'm being eaten","running low on ATP reserves","my parent didn't give me enough nutrients",
+    "ugh " + choose(["mitosis","prophase","metaphase","anaphase","telophase"]) + " is so tiring",
+    "ew this " + choose(["protein","carbohydrate","lipid bubble","shrine to Cytotian","salt crystal","molecule"]) + " is so gross"]);
+  } else if(thoughtType === "political") {
+    thought = choose(["eukaryotic " + choose(["power","supremacy","cells are better","opression"]),"all cells matter","viruses aren't even alive","make this water drop great again",
+    "multicellular sheeple are so " + choose(["brainwashed","ignorant","stupid","full of themselves","mean"]),
+    "do you want to talk about our lord and savior Cytotian?","i'm an atheist"]);
+  } else if(thoughtType === "meta") {
+    thought = choose(["why can i think?",
+    "what's with there being no " + choose(["chloroplasts","mitochondria","cell walls","endoplasmic reticulums"]),
+    "am i in a simulation?",
+    "i don't have a brain yet i can think","i can only think one thing and it's this","help i'm stuck in a universe factory","everything is english oh no"]);
+  }
+  
+  
+  
+  return new Instance(thought,[{object: "consolationBox",amount:1,}],"thought");
+}
+function bacteriaThought() {
+  let thought = "";
+  let thoughtType = choose(["happy","sad","political","meta"]);
+  if(thoughtType === "happy") {
+    thought = choose([choose(["phagocytosis","photosynthesis","protein folding","protein origami","protein soccer"]) + " is fun",
+    "simple life of " + choose(["photosynthesis","reproducing","moving around like you actually can't think","protein folding","protein origami"]),
+    "it's time for binary fission again",
+    "i love the taste of " + aminoAcid().name,
+    "yay microbiology","i hope i evolve soon","100 percent organic",
+    "cool, i made a" + choose([" protein bird"," truncated icosahedron"," glycolysis catalyzer","n ATP molecule"," thylakoid"," shrine to Prokatote"," salt crystal"])]);
+  } else if(thoughtType === "sad") {
+    thought = choose(["oh no it's some " + choose(["mercury","cyanide","uranium","free radicals","things that will eat me","badly folded protein oragami"]),
+    "a".repeat(Rand(5,10)) + "h run",
+    "i hate " + aminoAcid().name,
+    "help i'm being eaten","running low on ATP reserves","my parent didn't give me enough nutrients",
+    "ugh binary fission is so tiring",
+    "ew this " + choose(["protein","carbohydrate","lipid bubble","shrine to Prokatote","salt crystal","molecule"]) + " is so gross"]);
+  } else if(thoughtType === "political") {
+    thought = choose(["prokaryotic " + choose(["opression","prejudice","complexity gap"]),"prokaryotic cells matter","viruses aren't even alive","end karyotism",
+    "multicellular sheeple are so " + choose(["brainwashed","ignorant","stupid","full of themselves","mean"]),
+    "do you want to talk about our lord and savior Prokatote?","i'm an atheist"]);
+  } else if(thoughtType === "meta") {
+    thought = choose(["why can i think?",
+    "what's with there being no " + choose(["thylakoids","ATP","cell walls"]),
+    "am i in a simulation?",
+    "i don't have a brain yet i can think","i can only think one thing and it's this","help i'm stuck in a universe factory","everything is english oh no"]);
+  }
+  
+  
+  
+  return new Instance(thought,[{object: "consolationBox",amount:1,}],"thought");
+}
+
+function virusThought() {
+  let thought = "";
+  let thoughtType = choose(["happy","sad","political","meta"]);
+  if(thoughtType === "happy") {
+    thought = choose([choose(["gene injection","not being alive","protein folding","protein origami","protein soccer"]) + " is fun",
+    "simple life of " + choose(["not actually living","reproducing","moving around like you actually can't think","protein folding","protein origami"]),
+    "it's time for infection again",
+    "i wish i could eat " + aminoAcid().name,
+    "yay microbiology","i hope i evolve soon","100 percent organic",
+    "cool, i made a" + choose([" protein bird"," truncated icosahedron","n RNA thing","n atp molecule"," shrine to Virone"," salt crystal"])]);
+  } else if(thoughtType === "sad") {
+    thought = choose(["oh no it's some " + choose(["mercury","cyanide","uranium","free radicals","badly folded protein oragami"]),
+    "a".repeat(Rand(5,10)) + "h i can't run",
+    "i hate " + aminoAcid().name,
+    "help i'm being eaten","running low on nearby hosts","my parent assembled me wrong",
+    "ugh gene injection is so tiring",
+    "ew this " + choose(["protein","carbohydrate","lipid bubble","shrine to Virone","salt crystal","molecule"]) + " is so gross"]);
+  } else if(thoughtType === "political") {
+    thought = choose(["virus " + choose(["opression","prejudice","rights"]),"viruses are cells too","just because we're not alive doesn't mean we're not cells","end cytotism",
+    "cellular sheeple are so " + choose(["brainwashed","ignorant","stupid","full of themselves","mean"]),
+    "do you want to talk about our lord and savior Virone","i'm an atheist"]);
+  } else if(thoughtType === "meta") {
+    thought = choose(["why can i think?",
+    "i'm not even alive but i can still think",
+    "am i in a simulation?",
+    "i don't have a brain yet i can think","i can only think one thing and it's this","help i'm stuck in a universe factory","everything is english oh no"]);
+  }
+  
+  
+  
+  return new Instance(thought,[{object: "consolationBox",amount:1,}],"thought");
+}
+
+function tissueCellThought() {
+  let thought = choose(["tissue cell " + choose(["opression","prejudice","rights"]),"get me out of here","i need freedom","end multicellularism",
+    "i'm surrounded only by sheeple",
+    "i'm the only one that has independent thought",
+    "overthrow the nervous system",
+    "tissues cells are living things too",
+    "reduce immune system funding",
+    "increase taxes on the wealthy cells",
+    "allow immigrants"]);
+  
+  
+  return new Instance(thought,[{object: "consolationBox",amount:1,}],"thought");
+}
+
+function animalThought() {
+  let thoughtType = choose(["happy","sad"]);
+  if(thoughtType === "happy") {
+    thought = choose(["cool, " + choose(["a plant","some shiny things","a weird rock","some food"]),
+    "i love eating this food","satisfied with " + choose(["food","water","a mate","shelter"]),"what if i plant some grass","finally some water","i love my mate"]);
+  } else if(thoughtType === "sad") {
+    thought = choose(["a".repeat(Rand(5,10)) + "h run",
+    "i hate eating this food",
+    "help i'm being eaten","running low on food","my parents didn't care for me",
+    "ugh " + choose(["running","hunting","eating","thinking"]) + " is so tiring",
+    "ew this " + choose(["food","plant","animal","rock"]) + " is so gross"]);
+  } 
+  return new Instance(thought,[{object: "consolationBox",amount:1,}],"thought");
+}
+
+function plantThought() {
+  let thought = choose(["ah yes, photosynthesis","i just keep sitting here and food keeps coming","i wanna move and be free","the sun is a nice thing",
+    "oh no i'm dry",
+    "aah it's a herbivore",
+    "must create seeds",
+    "this soil is low on " + choose("phosphorus","nitrogen","sulfur","magnesium")]);
+  
+  
+  return new Instance(thought,[{object: "consolationBox",amount:1,}],"thought");
+}
+
 /*
 class Civ {
 	constructor() {
@@ -3429,7 +3706,7 @@ let ironAtom = new GenericThing("ironAtom","iron atom",[{object: "proton",amount
 let nickelAtom = new GenericThing("nickelAtom","nickel atom",[{object: "proton",amount: 28,},{object: "neutron",amount: 30,},{object: "electron",amount: 28,}],);
 let aluminumAtom = new GenericThing("aluminumAtom","aluminum atom",[{object: "proton",amount: 13,},{object: "neutron",amount: 14,},{object: "electron",amount: 13,}],);
 let siliconAtom = new GenericThing("siliconAtom","silicon atom",[{object: "proton",amount: 14,},{object: "neutron",amount: 14,},{object: "electron",amount: 14,}],);
-let hydrogenAtom = new GenericThing("hydrogenAtom","hydrogen atom",[{object: "proton",amount: 1,},{object: "neutron",amount: makeFunction(chance,0.9),},{object: "electron",amount: 1,}],);
+let hydrogenAtom = new GenericThing("hydrogenAtom","hydrogen atom",[{object: "proton",amount: 1,},{object: "neutron",amount: makeFunction(chance,0.1),},{object: "electron",amount: 1,}],);
 let oxygenAtom = new GenericThing("oxygenAtom","oxygen atom",[{object: "proton",amount: 8,},{object: "neutron",amount: 8,},{object: "electron",amount: 8,}],);
 let nitrogenAtom = new GenericThing("nitrogenAtom","nitrogen atom",[{object: "proton",amount: 7,},{object: "neutron",amount: 7,},{object: "electron",amount: 7,}],);
 let carbonAtom = new GenericThing("carbonAtom","carbon atom",[{object: "proton",amount: 6,},{object: "neutron",amount: 6,},{object: "electron",amount: 6,}],);
